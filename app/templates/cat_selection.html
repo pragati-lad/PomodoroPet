@@ -1,0 +1,522 @@
+{% extends "base.html" %}
+
+{% block title %}Choose Your Cat - PomoPet{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cat-selection-container {
+        max-width: 1200px;
+        margin: 50px auto;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .cat-selection-container h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        color: #333;
+    }
+
+    .cat-selection-container p {
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 40px;
+    }
+
+    .cats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+
+    .cat-card {
+        background: white;
+        border: 3px solid #e0e0e0;
+        border-radius: 15px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .cat-card:hover {
+        transform: translateY(-5px);
+        border-color: #ff9800;
+        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.3);
+    }
+
+    .cat-card.selected {
+        border-color: #ff9800;
+        background: #fff3e0;
+        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.4);
+    }
+
+    .cat-icon {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 15px;
+        position: relative;
+    }
+
+    /* Cat head */
+    .cat-head {
+        width: 80px;
+        height: 80px;
+        border-radius: 50% 50% 45% 45%;
+        position: absolute;
+        top: 20px;
+        left: 20px;
+    }
+
+    /* Cat ears */
+    .cat-ears {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+    }
+
+    .cat-ear {
+        width: 0;
+        height: 0;
+        border-left: 20px solid transparent;
+        border-right: 20px solid transparent;
+        border-bottom: 35px solid;
+        position: absolute;
+    }
+
+    .cat-ear.left {
+        left: 5px;
+        transform: rotate(-10deg);
+    }
+
+    .cat-ear.right {
+        right: 5px;
+        transform: rotate(10deg);
+    }
+
+    /* Cat eyes */
+    .cat-eyes {
+        position: absolute;
+        top: 45px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 20px;
+    }
+
+    .cat-eye {
+        width: 12px;
+        height: 12px;
+        background: white;
+        border-radius: 50%;
+        position: relative;
+    }
+
+    .cat-pupil {
+        width: 6px;
+        height: 8px;
+        background: #000;
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    /* Whiskers */
+    .cat-whiskers {
+        position: absolute;
+        top: 60px;
+        width: 120px;
+    }
+
+    .whisker {
+        position: absolute;
+        width: 30px;
+        height: 1px;
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    .whisker.left-1 { left: 0; top: 0; }
+    .whisker.left-2 { left: 0; top: 8px; }
+    .whisker.right-1 { right: 0; top: 0; }
+    .whisker.right-2 { right: 0; top: 8px; }
+
+    /* Personality-specific styles */
+    .cat-grumpy .cat-eye { height: 6px; margin-top: 3px; }
+    .cat-happy .cat-eye { width: 14px; height: 14px; }
+    .cat-sleepy .cat-eye { height: 4px; margin-top: 4px; background: #000; }
+    .cat-wink .cat-eye:first-child { height: 3px; margin-top: 5px; background: #000; }
+
+    /* Color variations */
+    .cat-black { background-color: #2c2c2c; }
+    .cat-orange { background-color: #ff9800; }
+    .cat-white { background-color: #f5f5f5; border: 1px solid #ddd; }
+    .cat-tuxedo { background: linear-gradient(to right, #2c2c2c 50%, #f5f5f5 50%); }
+    .cat-tabby { background-color: #8b6f47; }
+    .cat-siamese { background-color: #f4e4c1; }
+    .cat-gray { background-color: #9e9e9e; }
+    .cat-calico { background: linear-gradient(135deg, #ff9800 33%, #2c2c2c 33%, #2c2c2c 66%, #f5f5f5 66%); }
+    .cat-cream { background-color: #fff9e6; border: 1px solid #e0d5b7; }
+    .cat-striped { background: repeating-linear-gradient(90deg, #8b6f47, #8b6f47 10px, #6d5638 10px, #6d5638 20px); }
+
+    .cat-name {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #333;
+        margin: 10px 0 5px;
+    }
+
+    .cat-trait {
+        font-size: 0.9rem;
+        color: #666;
+        font-style: italic;
+    }
+
+    .name-input-section {
+        display: none;
+        max-width: 500px;
+        margin: 40px auto;
+        padding: 30px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .name-input-section.active {
+        display: block;
+    }
+
+    .name-input-section h2 {
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #555;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 12px;
+        font-size: 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        box-sizing: border-box;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #ff9800;
+    }
+
+    .btn {
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-primary {
+        background: #ff9800;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #f57c00;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cat-selection-container">
+    <h1>Choose Your Companion</h1>
+    <p>Select a cat that matches your personality!</p>
+
+    <div class="cats-grid">
+        <!-- Cat 1: Shadow -->
+        <div class="cat-card" data-cat-type="1">
+            <div class="cat-icon cat-grumpy">
+                <div class="cat-ears">
+                    <div class="cat-ear left cat-black"></div>
+                    <div class="cat-ear right cat-black"></div>
+                </div>
+                <div class="cat-head cat-black"></div>
+                <div class="cat-eyes">
+                    <div class="cat-eye"><div class="cat-pupil"></div></div>
+                    <div class="cat-eye"><div class="cat-pupil"></div></div>
+                </div>
+                <div class="cat-whiskers">
+                    <div class="whisker left-1"></div>
+                    <div class="whisker left-2"></div>
+                    <div class="whisker right-1"></div>
+                    <div class="whisker right-2"></div>
+                </div>
+            </div>
+            <div class="cat-name">Shadow</div>
+            <div class="cat-trait">Mysterious & Independent</div>
+        </div>
+
+        <!-- Cat 2: Ginger -->
+        <div class="cat-card" data-cat-type="2">
+            <div class="cat-icon cat-happy">
+                <div class="cat-ears">
+                    <div class="cat-ear left cat-orange"></div>
+                    <div class="cat-ear right cat-orange"></div>
+                </div>
+                <div class="cat-head cat-orange"></div>
+                <div class="cat-eyes">
+                    <div class="cat-eye"><div class="cat-pupil"></div></div>
+                    <div class="cat-eye"><div class="cat-pupil"></div></div>
+                </div>
+                <div class="cat-whiskers">
+                    <div class="whisker left-1"></div>
+                    <div class="whisker left-2"></div>
+                    <div class="whisker right-1"></div>
+                    <div class="whisker right-2"></div>
+                </div>
+            </div>
+            <div class="cat-name">Ginger</div>
+            <div class="cat-trait">Energetic & Demanding</div>
+        </div>
+
+        <!-- Cat 3: Luna -->
+        <div class="cat-card" data-cat-type="3">
+            <div class="cat-icon cat-sleepy">
+                <div class="cat-ears">
+                    <div class="cat-ear left cat-white"></div>
+                    <div class="cat-ear right cat-white"></div>
+                </div>
+                <div class="cat-head cat-white"></div>
+                <div class="cat-eyes">
+                    <div class="cat-eye"></div>
+                    <div class="cat-eye"></div>
+                </div>
+                <div class="cat-whiskers">
+                    <div class="whisker left-1"></div>
+                    <div class="whisker left-2"></div>
+                    <div class="whisker right-1"></div>
+                    <div class="whisker right-2"></div>
+                </div>
+            </div>
+            <div class="cat-name">Luna</div>
+            <div class="cat-trait">Calm & Zen</div>
+        </div>
+
+        <!-- Cat 4: Mittens -->
+        <div class="cat-card" data-cat-type="4">
+            <div class="cat-icon cat-wink">
+                <div class="cat-ears">
+                    <div class="cat-ear left cat-tuxedo"></div>
+                    <div class="cat-ear right cat-tuxedo"></div>
+                </div>
+                <div class="cat-head cat-tuxedo"></div>
+                <div class="cat-eyes">
+                    <div class="cat-eye"></div>
+                    <div class="cat-eye"><div class="cat-pupil"></div></div>
+                </div>
+                <div class="cat-whiskers">
+                    <div class="whisker left-1"></div>
+                    <div class="whisker left-2"></div>
+                    <div class="whisker right-1"></div>
+                    <div class="whisker right-2"></div>
+                </div>
+            </div>
+            <div class="cat-name">Mittens</div>
+            <div class="cat-trait">Playful & Mischievous</div>
+        </div>
+
+        <!-- Cat 5: Whiskers -->
+        <div class="cat-card" data-cat-type="5">
+            <div class="cat-icon cat-happy">
+                <div class="cat-ears">
+                    <div class="cat-ear left cat-tabby"></div>
+                    <div class="cat-ear right cat-tabby"></div>
+                </div>
+                <div class="cat-head cat-tabby"></div>
+                <div class="cat-eyes">
+                    <div class="cat-eye"><div class="cat-pupil"></div></div>
+                    <div class="cat-eye"><div class="cat-pupil"></div></div>
+                </div>
+                <div class="cat-whiskers">
+                    <div class="whisker left-1"></div>
+                    <div class="whisker left-2"></div>
+                    <div class="whisker right-1"></div>
+                    <div class="whisker right-2"></div>
+                </div>
+            </div>
+            <div class="cat-name">Whiskers</div>
+            <div class="cat-trait">Loyal & Clingy</div>
+        </div>
+
+        <!-- Cat 6: Neko -->
+        <div class="cat-card" data-cat-type="6">
+            <div class="cat-icon">
+                <div class="cat-ears">
+                    <div class="cat-ear left cat-siamese"></div>
+                    <div class="cat-ear right cat-siamese"></div>
+                </div>
+                <div class="cat-head cat-siamese"></div>
+                <div class="cat-eyes">
+                    <div class="cat-eye"><div class="cat-pupil"></div></div>
+                    <div class="cat-eye"><div class="cat-pupil"></div></div>
+                </div>
+                <div class="cat-whiskers">
+                    <div class="whisker left-1"></div>
+                    <div class="whisker left-2"></div>
+                    <div class="whisker right-1"></div>
+                    <div class="whisker right-2"></div>
+                </div>
+            </div>
+            <div class="cat-name">Neko</div>
+            <div class="cat-trait">Smart & Curious</div>
+        </div>
+
+        <!-- Cat 7: Mochi -->
+        <div class="cat-card" data-cat-type="7">
+            <div class="cat-icon cat-sleepy">
+                <div class="cat-ears">
+                    <div class="cat-ear left cat-gray"></div>
+                    <div class="cat-ear right cat-gray"></div>
+                </div>
+                <div class="cat-head cat-gray"></div>
+                <div class="cat-eyes">
+                    <div class="cat-eye"></div>
+                    <div class="cat-eye"></div>
+                </div>
+                <div class="cat-whiskers">
+                    <div class="whisker left-1"></div>
+                    <div class="whisker left-2"></div>
+                    <div class="whisker right-1"></div>
+                    <div class="whisker right-2"></div>
+                </div>
+            </div>
+            <div class="cat-name">Mochi</div>
+            <div class="cat-trait">Lazy & Sleepy</div>
+        </div>
+
+        <!-- Cat 8: Pepper -->
+        <div class="cat-card" data-cat-type="8">
+            <div class="cat-icon cat-grumpy">
+                <div class="cat-ears">
+                    <div class="cat-ear left cat-calico"></div>
+                    <div class="cat-ear right cat-calico"></div>
+                </div>
+                <div class="cat-head cat-calico"></div>
+                <div class="cat-eyes">
+                    <div class="cat-eye"><div class="cat-pupil"></div></div>
+                    <div class="cat-eye"><div class="cat-pupil"></div></div>
+                </div>
+                <div class="cat-whiskers">
+                    <div class="whisker left-1"></div>
+                    <div class="whisker left-2"></div>
+                    <div class="whisker right-1"></div>
+                    <div class="whisker right-2"></div>
+                </div>
+            </div>
+            <div class="cat-name">Pepper</div>
+            <div class="cat-trait">Sassy & Moody</div>
+        </div>
+
+        <!-- Cat 9: Tofu -->
+        <div class="cat-card" data-cat-type="9">
+            <div class="cat-icon">
+                <div class="cat-ears">
+                    <div class="cat-ear left cat-cream"></div>
+                    <div class="cat-ear right cat-cream"></div>
+                </div>
+                <div class="cat-head cat-cream"></div>
+                <div class="cat-eyes">
+                    <div class="cat-eye"><div class="cat-pupil"></div></div>
+                    <div class="cat-eye"><div class="cat-pupil"></div></div>
+                </div>
+                <div class="cat-whiskers">
+                    <div class="whisker left-1"></div>
+                    <div class="whisker left-2"></div>
+                    <div class="whisker right-1"></div>
+                    <div class="whisker right-2"></div>
+                </div>
+            </div>
+            <div class="cat-name">Tofu</div>
+            <div class="cat-trait">Gentle & Supportive</div>
+        </div>
+
+        <!-- Cat 10: Bandit -->
+        <div class="cat-card" data-cat-type="10">
+            <div class="cat-icon cat-happy">
+                <div class="cat-ears">
+                    <div class="cat-ear left cat-striped"></div>
+                    <div class="cat-ear right cat-striped"></div>
+                </div>
+                <div class="cat-head cat-striped"></div>
+                <div class="cat-eyes">
+                    <div class="cat-eye"><div class="cat-pupil"></div></div>
+                    <div class="cat-eye"><div class="cat-pupil"></div></div>
+                </div>
+                <div class="cat-whiskers">
+                    <div class="whisker left-1"></div>
+                    <div class="whisker left-2"></div>
+                    <div class="whisker right-1"></div>
+                    <div class="whisker right-2"></div>
+                </div>
+            </div>
+            <div class="cat-name">Bandit</div>
+            <div class="cat-trait">Adventurous & Playful</div>
+        </div>
+    </div>
+
+    <!-- Name input section (hidden initially) -->
+    <div class="name-input-section" id="nameSection">
+        <h2>Name Your Cat</h2>
+        <form method="POST" action="{{ url_for('main.cat_selection') }}">
+            <input type="hidden" id="catTypeInput" name="cat_type" value="">
+            <div class="form-group">
+                <label for="cat_name">What will you name your companion?</label>
+                <input type="text" id="cat_name" name="cat_name" required maxlength="20" placeholder="Enter a name...">
+            </div>
+            <button type="submit" class="btn btn-primary">Continue to Timer Setup</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Cat selection logic
+    const catCards = document.querySelectorAll('.cat-card');
+    const nameSection = document.getElementById('nameSection');
+    const catTypeInput = document.getElementById('catTypeInput');
+
+    catCards.forEach(card => {
+        card.addEventListener('click', () => {
+            // Remove selected class from all cards
+            catCards.forEach(c => c.classList.remove('selected'));
+
+            // Add selected class to clicked card
+            card.classList.add('selected');
+
+            // Set cat type value
+            const catType = card.getAttribute('data-cat-type');
+            catTypeInput.value = catType;
+
+            // Show name input section
+            nameSection.classList.add('active');
+
+            // Scroll to name section
+            nameSection.scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+</script>
+{% endblock %}
