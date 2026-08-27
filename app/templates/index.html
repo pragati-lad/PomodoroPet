@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}PomoPet - Study with Your Virtual Pet{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <div class="hero-content">
+        <h1>Study Better with PomoPet</h1>
+        <p class="tagline">A Pomodoro timer with a virtual pet companion that grows as you study!</p>
+
+        <div class="features">
+            <div class="feature">
+                <span class="feature-icon">⏰</span>
+                <h3>Pomodoro Timer</h3>
+                <p>Customizable focus and break sessions</p>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">🐱</span>
+                <h3>10 Unique Cats</h3>
+                <p>Choose your companion with different personalities</p>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">📈</span>
+                <h3>Growth System</h3>
+                <p>Your cat grows as you study consistently</p>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">💝</span>
+                <h3>Care & Play</h3>
+                <p>Feed and play with your cat during breaks</p>
+            </div>
+        </div>
+
+        <div class="cta-buttons">
+            <a href="{{ url_for('auth.signup') }}" class="btn btn-primary btn-large">Get Started</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-large">Login</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

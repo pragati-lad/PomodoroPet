@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Statistics - PomoPet{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-container {
+        max-width: 1200px;
+        margin: 30px auto;
+        padding: 20px;
+    }
+
+    .stats-header {
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .stats-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-box {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-box-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+
+    .stat-box-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .stat-box-label {
+        font-size: 1rem;
+        color: #666;
+    }
+
+    .sessions-list {
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+    }
+
+    .sessions-list h2 {
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    .session-item {
+        padding: 15px;
+        border-bottom: 1px solid #e0e0e0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .session-item:last-child {
+        border-bottom: none;
+    }
+
+    .session-date {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .session-duration {
+        font-weight: bold;
+        color: #ff9800;
+    }
+
+    .session-score {
+        background: #4caf50;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+    }
+
+    .session-score.low {
+        background: #f44336;
+    }
+
+    .session-score.medium {
+        background: #ff9800;
+    }
+
+    .no-sessions {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-top: 20px;
+        color: #ff9800;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .back-link:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats-container">
+    <!-- Header -->
+    <div class="stats-header">
+        <h1>Your Study Statistics</h1>
+        <p>Track your progress with {{ cat.name }}</p>
+    </div>
+
+    <!-- Overview Stats -->
+    <div class="stats-overview">
+        <div class="stat-box">
+            <div class="stat-box-icon">📚</div>
+            <div class="stat-box-value">{{ total_sessions }}</div>
+            <div class="stat-box-label">Total Sessions</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-box-icon">⏱️</div>
+            <div class="stat-box-value">{{ total_focus_time }}</div>
+            <div class="stat-box-label">Total Minutes</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-box-icon">🎯</div>
+            <div class="stat-box-value">{{ "%.0f"|format(avg_focus_score) }}%</div>
+            <div class="stat-box-label">Avg Focus Score</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-box-icon">🐱</div>
+            <div class="stat-box-value">{{ cat.age_days }}</div>
+            <div class="stat-box-label">Cat Age (days)</div>
+        </div>
+    </div>
+
+    <!-- Recent Sessions -->
+    <div class="sessions-list">
+        <h2>Recent Study Sessions</h2>
+
+        {% if sessions %}
+            {% for session in sessions %}
+            <div class="session-item">
+                <div>
+                    <div class="session-date">
+                        {{ session.completed_at.strftime('%B %d, %Y at %I:%M %p') if session.completed_at else 'In Progress' }}
+                    </div>
+                    <div class="session-duration">
+                        {{ session.focus_duration }} min focus / {{ session.break_duration }} min break
+                    </div>
+                </div>
+                <div class="session-score {% if session.focus_score < 50 %}low{% elif session.focus_score < 80 %}medium{% endif %}">
+                    {{ session.focus_score }}% Focus
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-sessions">
+                <p>No study sessions yet. Start your first session!</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <div style="text-align: center;">
+        <a href="{{ url_for('main.dashboard') }}" class="back-link">← Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

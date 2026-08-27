@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+
+{% block title %}Study Session - PomoPet{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .timer-container {
+        max-width: 800px;
+        margin: 30px auto;
+        padding: 20px;
+    }
+
+    .session-info {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .session-info h2 {
+        margin: 0;
+        color: #333;
+    }
+
+    .timer-display {
+        background: white;
+        padding: 60px 40px;
+        border-radius: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .phase-label {
+        font-size: 1.5rem;
+        color: #666;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+
+    .phase-label.focus {
+        color: #ff9800;
+    }
+
+    .phase-label.break {
+        color: #4caf50;
+    }
+
+    .countdown {
+        font-size: 6rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 30px;
+        font-family: 'Courier New', monospace;
+    }
+
+    .timer-controls {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+
+    .control-btn {
+        padding: 15px 30px;
+        font-size: 1.1rem;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 600;
+    }
+
+    .control-btn.start {
+        background: #4caf50;
+        color: white;
+    }
+
+    .control-btn.start:hover {
+        background: #45a049;
+    }
+
+    .control-btn.pause {
+        background: #ff9800;
+        color: white;
+    }
+
+    .control-btn.pause:hover {
+        background: #f57c00;
+    }
+
+    .control-btn.stop {
+        background: #f44336;
+        color: white;
+    }
+
+    .control-btn.stop:hover {
+        background: #da190b;
+    }
+
+    .control-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+
+    .cat-companion {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 30px;
+        border-radius: 20px;
+        text-align: center;
+    }
+
+    .cat-companion h3 {
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    .cat-display {
+        margin: 30px auto;
+        width: 150px;
+        height: 150px;
+        position: relative;
+    }
+
+    .cat-message {
+        font-size: 1.1rem;
+        color: #666;
+        margin: 20px 0;
+        font-style: italic;
+    }
+
+    .cat-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .stat {
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #999;
+        margin-bottom: 5px;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .stat-bar {
+        width: 100%;
+        height: 10px;
+        background: #e0e0e0;
+        border-radius: 5px;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+
+    .stat-bar-fill {
+        height: 100%;
+        transition: width 0.3s;
+        border-radius: 5px;
+    }
+
+    .stat-bar-fill.happiness {
+        background: linear-gradient(90deg, #4caf50, #8bc34a);
+    }
+
+    .stat-bar-fill.hunger {
+        background: linear-gradient(90deg, #ff9800, #ffc107);
+    }
+
+    .camera-feed {
+        margin-top: 20px;
+        display: none;
+    }
+
+    .camera-feed.active {
+        display: block;
+    }
+
+    .camera-feed video {
+        width: 100%;
+        max-width: 400px;
+        border-radius: 10px;
+        border: 3px solid #2196f3;
+    }
+
+    .distraction-warning {
+        background: #fff3e0;
+        border: 2px solid #ff9800;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 15px;
+        display: none;
+    }
+
+    .distraction-warning.active {
+        display: block;
+    }
+
+    .distraction-warning strong {
+        color: #f57c00;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="timer-container">
+    <!-- Session Info -->
+    <div class="session-info">
+        <h2>Study Session</h2>
+        <p>Focus: {{ session.focus_duration }} min | Break: {{ session.break_duration }} min</p>
+    </div>
+
+    <!-- Timer Display -->
+    <div class="timer-display">
+        <div class="phase-label focus" id="phaseLabel">Focus Time</div>
+        <div class="countdown" id="countdown">{{ session.focus_duration }}:00</div>
+        <div class="timer-controls">
+            <button class="control-btn start" id="startBtn">Start</button>
+            <button class="control-btn pause" id="pauseBtn" disabled>Pause</button>
+            <button class="control-btn stop" id="stopBtn" disabled>End Session</button>
+        </div>
+    </div>
+
+    <!-- Cat Companion -->
+    <div class="cat-companion">
+        <h3>{{ cat.name }} is watching over you</h3>
+
+        <!-- Cat Display (reuse from selection page) -->
+        <div class="cat-display">
+            <!-- Cat icon would go here - simplified for now -->
+            <div style="font-size: 5rem;">🐱</div>
+        </div>
+
+        <div class="cat-message" id="catMessage">
+            Focus well and I'll be happy!
+        </div>
+
+        <!-- Cat Stats -->
+        <div class="cat-stats">
+            <div class="stat">
+                <div class="stat-label">Happiness</div>
+                <div class="stat-value" id="happinessValue">{{ cat.happiness }}%</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill happiness" style="width: {{ cat.happiness }}%"></div>
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Hunger</div>
+                <div class="stat-value" id="hungerValue">{{ cat.hunger }}%</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill hunger" style="width: {{ cat.hunger }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Camera Feed (if enabled) -->
+        {% if session.camera_enabled %}
+        <div class="camera-feed" id="cameraFeed">
+            <video id="video" autoplay></video>
+            <div class="distraction-warning" id="distractionWarning">
+                <strong>⚠️ Phone detected!</strong> Put it away to keep {{ cat.name }} happy.
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    const sessionId = {{ session.id }};
+    const focusDuration = {{ session.focus_duration }} * 60; // Convert to seconds
+    const breakDuration = {{ session.break_duration }} * 60;
+    const cameraEnabled = {{ 'true' if session.camera_enabled else 'false' }};
+
+    let currentPhase = 'focus'; // 'focus' or 'break'
+    let timeRemaining = focusDuration;
+    let timerInterval = null;
+    let isPaused = false;
+    let focusScore = 100;
+
+    // DOM elements
+    const countdown = document.getElementById('countdown');
+    const phaseLabel = document.getElementById('phaseLabel');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const catMessage = document.getElementById('catMessage');
+
+    // Format time as MM:SS
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Update countdown display
+    function updateDisplay() {
+        countdown.textContent = formatTime(timeRemaining);
+    }
+
+    // Start timer
+    function startTimer() {
+        if (timerInterval) return;
+
+        startBtn.disabled = true;
+        pauseBtn.disabled = false;
+        stopBtn.disabled = false;
+
+        timerInterval = setInterval(() => {
+            if (!isPaused) {
+                timeRemaining--;
+                updateDisplay();
+
+                if (timeRemaining <= 0) {
+                    // Phase complete
+                    if (currentPhase === 'focus') {
+                        completeFocusPhase();
+                    } else {
+                        completeBreakPhase();
+                    }
+                }
+            }
+        }, 1000);
+
+        {% if session.camera_enabled %}
+        startCamera();
+        {% endif %}
+    }
+
+    // Pause timer
+    function pauseTimer() {
+        isPaused = !isPaused;
+        pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
+    }
+
+    // Stop session
+    function stopSession() {
+        if (confirm('Are you sure you want to end this session?')) {
+            completeSession();
+        }
+    }
+
+    // Complete focus phase
+    function completeFocusPhase() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+
+        // Switch to break
+        currentPhase = 'break';
+        timeRemaining = breakDuration;
+        phaseLabel.textContent = 'Break Time!';
+        phaseLabel.classList.remove('focus');
+        phaseLabel.classList.add('break');
+        catMessage.textContent = "Great job! Time to play with me!";
+
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+
+        // Play sound/notification
+        alert('Focus session complete! Time for a break!');
+    }
+
+    // Complete break phase
+    function completeBreakPhase() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+
+        completeSession();
+    }
+
+    // Complete session and redirect
+    function completeSession() {
+        fetch(`/api/complete-session/{{ session.id }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                focus_score: focusScore
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(`Session complete! ${data.cat_age} days old now!`);
+            window.location.href = '{{ url_for("main.dashboard") }}';
+        });
+    }
+
+    // Camera setup (if enabled)
+    {% if session.camera_enabled %}
+    async function startCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const video = document.getElementById('video');
+            video.srcObject = stream;
+            document.getElementById('cameraFeed').classList.add('active');
+
+            // TODO: Implement phone detection with TensorFlow.js
+            // For now, this is a placeholder
+        } catch (err) {
+            console.error('Camera access denied:', err);
+        }
+    }
+    {% endif %}
+
+    // Event listeners
+    startBtn.addEventListener('click', startTimer);
+    pauseBtn.addEventListener('click', pauseTimer);
+    stopBtn.addEventListener('click', stopSession);
+
+    // Initialize display
+    updateDisplay();
+</script>
+{% endblock %}
