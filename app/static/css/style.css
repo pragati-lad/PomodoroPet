@@ -1,0 +1,522 @@
+/* PomoPet - Kawaii Stationery / Studio Ghibli Aesthetic */
+
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;600;700&display=swap');
+
+/* Color Palette - Soft Pastels */
+:root {
+    --bg-sage: #d5dcc5;
+    --bg-cream: #f5efe0;
+    --card-cream: #f9f3e6;
+    --card-pink: #f0ddd5;
+    --card-blue: #d4e4ed;
+    --card-lavender: #e0d5e8;
+    --card-green: #dce8d5;
+    --border-sketch: #9b8b7a;
+    --text-dark: #4a3f35;
+    --text-soft: #7a6f63;
+    --accent-brown: #a08872;
+    --accent-green: #8a9e78;
+    --accent-pink: #c49e8d;
+    --accent-blue: #8dabc4;
+    --shadow-soft: rgba(120, 100, 80, 0.15);
+}
+
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Nunito', 'Segoe UI', sans-serif;
+    background: var(--bg-sage);
+    color: var(--text-dark);
+    line-height: 1.7;
+    min-height: 100vh;
+}
+
+/* Paper texture on body */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg width='400' height='400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: -1;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ===== NAVIGATION - Notebook Tab Style ===== */
+.navbar {
+    background: var(--card-cream);
+    border-bottom: 3px solid var(--border-sketch);
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 12px var(--shadow-soft);
+}
+
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-family: 'Patrick Hand', cursive;
+    font-size: 1.8rem;
+    color: var(--text-dark);
+    text-decoration: none;
+    transition: all 0.3s;
+    letter-spacing: 1px;
+}
+
+.logo:hover {
+    color: var(--accent-brown);
+}
+
+.nav-links {
+    display: flex;
+    gap: 8px;
+}
+
+.nav-links a {
+    font-family: 'Patrick Hand', cursive;
+    color: var(--text-soft);
+    text-decoration: none;
+    font-size: 1.1rem;
+    padding: 8px 18px;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    transition: all 0.3s;
+}
+
+.nav-links a:hover {
+    background: var(--card-green);
+    border-color: var(--border-sketch);
+    color: var(--text-dark);
+    transform: rotate(-2deg);
+}
+
+/* ===== FLASH MESSAGES - Sticky Note Style ===== */
+.flash-messages {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 2000;
+    max-width: 350px;
+}
+
+.alert {
+    font-family: 'Patrick Hand', cursive;
+    padding: 18px 22px;
+    margin-bottom: 12px;
+    border-radius: 4px;
+    box-shadow: 3px 3px 0px var(--shadow-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: paperDrop 0.4s ease;
+    transform: rotate(-1deg);
+    font-size: 1.05rem;
+}
+
+@keyframes paperDrop {
+    from { transform: translateY(-30px) rotate(-5deg); opacity: 0; }
+    to { transform: translateY(0) rotate(-1deg); opacity: 1; }
+}
+
+.alert-success {
+    background: var(--card-green);
+    color: #3d5a2e;
+    border-left: 5px solid var(--accent-green);
+}
+
+.alert-error {
+    background: var(--card-pink);
+    color: #6b3a3a;
+    border-left: 5px solid var(--accent-pink);
+}
+
+.alert-info {
+    background: var(--card-blue);
+    color: #2e4a5a;
+    border-left: 5px solid var(--accent-blue);
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.6;
+    transition: all 0.3s;
+}
+
+.close-btn:hover {
+    opacity: 1;
+    transform: scale(1.3);
+}
+
+/* ===== MAIN CONTENT ===== */
+.main-content {
+    min-height: calc(100vh - 140px);
+    padding: 30px 0;
+}
+
+/* ===== FOOTER - Simple ===== */
+.footer {
+    background: var(--card-cream);
+    color: var(--text-soft);
+    text-align: center;
+    padding: 20px;
+    margin-top: 50px;
+    border-top: 3px dashed var(--border-sketch);
+    font-family: 'Patrick Hand', cursive;
+    font-size: 1rem;
+}
+
+/* ===== HERO SECTION - Paper Card Style ===== */
+.hero {
+    background: var(--bg-sage);
+    color: var(--text-dark);
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.hero-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.hero-content h1 {
+    font-family: 'Patrick Hand', cursive;
+    font-size: 3.2rem;
+    margin-bottom: 15px;
+    color: var(--text-dark);
+    animation: gentleBounce 3s ease-in-out infinite;
+    letter-spacing: 2px;
+}
+
+@keyframes gentleBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.tagline {
+    font-family: 'Patrick Hand', cursive;
+    font-size: 1.3rem;
+    margin-bottom: 50px;
+    color: var(--text-soft);
+}
+
+/* ===== FEATURE CARDS - Notebook/Paper Cards ===== */
+.features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    margin: 40px auto;
+    max-width: 700px;
+}
+
+.feature {
+    background: var(--card-cream);
+    padding: 30px 25px;
+    border-radius: 4px;
+    border: 2px solid var(--border-sketch);
+    box-shadow: 4px 4px 0px var(--shadow-soft);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.feature:nth-child(1) { transform: rotate(-1deg); background: var(--card-cream); }
+.feature:nth-child(2) { transform: rotate(1.5deg); background: var(--card-pink); }
+.feature:nth-child(3) { transform: rotate(-0.5deg); background: var(--card-blue); }
+.feature:nth-child(4) { transform: rotate(1deg); background: var(--card-lavender); }
+
+.feature:hover {
+    transform: translateY(-8px) rotate(0deg) !important;
+    box-shadow: 6px 8px 0px var(--shadow-soft);
+}
+
+/* Tape effect on cards */
+.feature::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-2deg);
+    width: 60px;
+    height: 16px;
+    background: rgba(200, 190, 170, 0.6);
+    border-radius: 2px;
+}
+
+.feature-svg {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.feature-svg svg {
+    transition: transform 0.3s ease;
+}
+
+.feature:hover .feature-svg svg {
+    transform: scale(1.1) rotate(-3deg);
+}
+
+.feature h3 {
+    font-family: 'Patrick Hand', cursive;
+    margin-bottom: 10px;
+    font-size: 1.4rem;
+    color: var(--text-dark);
+    border-bottom: 2px dashed var(--border-sketch);
+    padding-bottom: 8px;
+}
+
+.feature p {
+    font-size: 0.95rem;
+    color: var(--text-soft);
+    line-height: 1.5;
+}
+
+/* ===== BUTTONS - Sticker Style ===== */
+.cta-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 40px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    font-family: 'Patrick Hand', cursive;
+    padding: 14px 35px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.15rem;
+    transition: all 0.3s ease;
+    display: inline-block;
+    border: 2.5px solid var(--border-sketch);
+    cursor: pointer;
+    box-shadow: 3px 3px 0px var(--shadow-soft);
+    letter-spacing: 0.5px;
+}
+
+.btn:active {
+    box-shadow: 1px 1px 0px var(--shadow-soft);
+    transform: translate(2px, 2px);
+}
+
+.btn-primary {
+    background: var(--card-pink);
+    color: var(--text-dark);
+}
+
+.btn-primary:hover {
+    background: var(--accent-pink);
+    color: white;
+    transform: rotate(-2deg) scale(1.05);
+}
+
+.btn-secondary {
+    background: var(--card-cream);
+    color: var(--text-dark);
+}
+
+.btn-secondary:hover {
+    background: var(--card-green);
+    transform: rotate(2deg) scale(1.05);
+}
+
+.btn-large {
+    padding: 16px 45px;
+    font-size: 1.25rem;
+}
+
+/* ===== AUTH PAGES - Paper Card Style ===== */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 200px);
+    padding: 30px 20px;
+}
+
+.auth-box {
+    background: var(--card-cream);
+    padding: 45px;
+    border-radius: 4px;
+    border: 2.5px solid var(--border-sketch);
+    box-shadow: 5px 5px 0px var(--shadow-soft);
+    max-width: 450px;
+    width: 100%;
+    transform: rotate(-0.5deg);
+    position: relative;
+}
+
+/* Tape on top of auth card */
+.auth-box::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%) rotate(1deg);
+    width: 80px;
+    height: 18px;
+    background: rgba(200, 190, 170, 0.6);
+    border-radius: 2px;
+}
+
+.auth-box h1 {
+    font-family: 'Patrick Hand', cursive;
+    text-align: center;
+    margin-bottom: 8px;
+    color: var(--text-dark);
+    font-size: 2rem;
+}
+
+.auth-box > p {
+    font-family: 'Patrick Hand', cursive;
+    text-align: center;
+    color: var(--text-soft);
+    margin-bottom: 30px;
+    font-size: 1.1rem;
+}
+
+.auth-form .form-group {
+    margin-bottom: 22px;
+}
+
+.auth-form label {
+    font-family: 'Patrick Hand', cursive;
+    display: block;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+    color: var(--text-dark);
+}
+
+.auth-form input[type="text"],
+.auth-form input[type="email"],
+.auth-form input[type="password"] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border-sketch);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: 'Nunito', sans-serif;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.auth-form input:focus {
+    outline: none;
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 3px rgba(138, 158, 120, 0.2);
+}
+
+.auth-form .checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.auth-form .checkbox input { width: auto; }
+.auth-form .checkbox label { margin-bottom: 0; font-weight: normal; }
+
+.auth-form button {
+    font-family: 'Patrick Hand', cursive;
+    width: 100%;
+    padding: 14px;
+    background: var(--card-green);
+    color: var(--text-dark);
+    border: 2.5px solid var(--border-sketch);
+    border-radius: 12px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 3px 3px 0px var(--shadow-soft);
+}
+
+.auth-form button:hover {
+    background: var(--accent-green);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 4px 5px 0px var(--shadow-soft);
+}
+
+.auth-form button:active {
+    transform: translateY(1px);
+    box-shadow: 1px 1px 0px var(--shadow-soft);
+}
+
+.auth-switch {
+    font-family: 'Patrick Hand', cursive;
+    text-align: center;
+    margin-top: 20px;
+    color: var(--text-soft);
+    font-size: 1.05rem;
+}
+
+.auth-switch a {
+    color: var(--accent-green);
+    text-decoration: none;
+    font-weight: 700;
+    border-bottom: 2px dashed var(--accent-green);
+    transition: all 0.3s;
+}
+
+.auth-switch a:hover {
+    color: var(--text-dark);
+    border-bottom-style: solid;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .hero-content h1 {
+        font-size: 2.2rem;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+        max-width: 350px;
+    }
+
+    .feature:nth-child(1),
+    .feature:nth-child(2),
+    .feature:nth-child(3),
+    .feature:nth-child(4) {
+        transform: rotate(0deg);
+    }
+
+    .nav-links { gap: 5px; }
+    .nav-links a { padding: 6px 12px; font-size: 1rem; }
+
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn-large {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .auth-box {
+        padding: 30px 22px;
+        transform: rotate(0deg);
+    }
+}

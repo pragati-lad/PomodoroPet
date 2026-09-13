@@ -1,0 +1,1516 @@
+{% extends "base.html" %}
+
+{% block title %}Study Session - PomoPet{% endblock %}
+
+{% block extra_css %}
+{% if session.camera_enabled %}
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3"></script>
+{% endif %}
+<style>
+    body {
+        background: var(--bg-sage);
+        overflow: hidden;
+    }
+
+    .main-content {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 140px);
+        padding: 0;
+    }
+
+    .footer {
+        display: none;
+    }
+
+    /* Timer centered on page */
+    .timer-display {
+        background: var(--card-cream);
+        padding: 35px 45px;
+        border-radius: 4px;
+        border: 3px solid var(--border-sketch);
+        text-align: center;
+        box-shadow: 6px 6px 0px var(--shadow-soft);
+        position: relative;
+        transform: rotate(-0.5deg);
+        z-index: 10;
+    }
+
+    .timer-display::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%) rotate(-1deg);
+        width: 80px;
+        height: 18px;
+        background: rgba(200, 190, 170, 0.6);
+        border-radius: 2px;
+    }
+
+    .phase-label {
+        font-family: 'Patrick Hand', cursive;
+        font-size: 1.5rem;
+        color: var(--text-soft);
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .phase-label.focus {
+        color: var(--accent-brown);
+    }
+
+    .phase-label.break {
+        color: var(--accent-green);
+    }
+
+    .countdown {
+        font-size: 5.5rem;
+        font-weight: bold;
+        color: var(--text-dark);
+        margin-bottom: 20px;
+        font-family: 'Patrick Hand', cursive;
+        line-height: 1;
+    }
+
+    .timer-controls {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+
+    .control-btn {
+        font-family: 'Patrick Hand', cursive;
+        padding: 15px 30px;
+        font-size: 1.2rem;
+        border: 2.5px solid var(--border-sketch);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 600;
+        box-shadow: 3px 3px 0px var(--shadow-soft);
+    }
+
+    .control-btn.start {
+        background: var(--card-green);
+        color: var(--text-dark);
+    }
+
+    .control-btn.start:hover {
+        background: var(--accent-green);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 4px 4px 0px var(--shadow-soft);
+    }
+
+    .control-btn.pause {
+        background: var(--card-blue);
+        color: var(--text-dark);
+    }
+
+    .control-btn.pause:hover {
+        background: var(--accent-blue);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 4px 4px 0px var(--shadow-soft);
+    }
+
+    .control-btn.stop {
+        background: var(--card-pink);
+        color: var(--text-dark);
+    }
+
+    .control-btn.stop:hover {
+        background: var(--accent-pink);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 4px 4px 0px var(--shadow-soft);
+    }
+
+    .control-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Free-roaming cat */
+    #roamingCat {
+        position: fixed;
+        width: 120px;
+        height: 120px;
+        z-index: 5;
+        pointer-events: none;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+    }
+
+    /* Cat speech bubble */
+    #catSpeech {
+        position: fixed;
+        z-index: 50;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-family: 'Patrick Hand', cursive;
+        font-size: 0.95rem;
+        color: var(--text-dark);
+        background: var(--card-cream);
+        border: 2px solid var(--border-sketch);
+        border-radius: 10px 10px 10px 2px;
+        padding: 5px 12px;
+        box-shadow: 2px 2px 0px var(--shadow-soft);
+        white-space: nowrap;
+        transform: rotate(-1deg);
+    }
+
+    #catSpeech.visible {
+        opacity: 1;
+    }
+
+    /* Camera feed - top-right rectangular overlay */
+    .camera-feed {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 20;
+        display: none;
+    }
+
+    .camera-feed.active {
+        display: block;
+    }
+
+    .camera-label {
+        font-family: 'Patrick Hand', cursive;
+        font-size: 0.8rem;
+        color: var(--text-soft);
+        text-align: center;
+        margin-bottom: 4px;
+    }
+
+    .camera-feed video {
+        width: 500px;
+        height: 300px;
+        object-fit: cover;
+        border-radius: 4px;
+        border: 3px solid var(--border-sketch);
+        box-shadow: 3px 3px 0px var(--shadow-soft);
+        transform: scaleX(-1);
+    }
+
+    .detection-debug {
+        font-family: 'Patrick Hand', cursive;
+        font-size: 0.8rem;
+        color: var(--text-soft);
+        margin-top: 4px;
+        max-width: 500px;
+        word-wrap: break-word;
+    }
+
+    .distraction-warning {
+        font-family: 'Patrick Hand', cursive;
+        background: var(--card-pink);
+        border: 2.5px solid var(--border-sketch);
+        border-radius: 4px;
+        padding: 8px 10px;
+        margin-top: 6px;
+        display: none;
+        box-shadow: 3px 3px 0px var(--shadow-soft);
+        font-size: 0.9rem;
+        max-width: 320px;
+    }
+
+    .distraction-warning.active {
+        display: block;
+    }
+
+    .distraction-warning strong {
+        color: var(--accent-brown);
+    }
+
+    /* Confirm modal */
+    .confirm-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.35);
+        z-index: 110;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .confirm-overlay.active {
+        display: flex;
+    }
+
+    .confirm-card {
+        background: var(--card-cream);
+        padding: 30px 35px;
+        border-radius: 4px;
+        border: 3px solid var(--border-sketch);
+        text-align: center;
+        box-shadow: 6px 6px 0px var(--shadow-soft);
+        position: relative;
+        transform: rotate(-0.5deg);
+        max-width: 320px;
+        width: 85%;
+    }
+
+    .confirm-card::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%) rotate(1deg);
+        width: 60px;
+        height: 16px;
+        background: rgba(200, 190, 170, 0.6);
+        border-radius: 2px;
+    }
+
+    .confirm-msg {
+        font-family: 'Patrick Hand', cursive;
+        font-size: 1.3rem;
+        color: var(--text-dark);
+        margin-bottom: 20px;
+    }
+
+    .confirm-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+    }
+
+    .confirm-yes, .confirm-no {
+        font-family: 'Patrick Hand', cursive;
+        padding: 10px 24px;
+        font-size: 1.1rem;
+        border: 2.5px solid var(--border-sketch);
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        box-shadow: 3px 3px 0px var(--shadow-soft);
+        transition: all 0.2s;
+    }
+
+    .confirm-yes {
+        background: var(--card-pink);
+        color: var(--text-dark);
+    }
+
+    .confirm-yes:hover {
+        background: var(--accent-pink);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .confirm-no {
+        background: var(--card-green);
+        color: var(--text-dark);
+    }
+
+    .confirm-no:hover {
+        background: var(--accent-green);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Hide navbar on timer page */
+    .navbar {
+        display: none;
+    }
+
+    /* Cat bowls */
+    .cat-bowls {
+        position: fixed;
+        bottom: 20px;
+        right: 30px;
+        z-index: 30;
+        display: flex;
+        gap: 20px;
+    }
+
+    .bowl-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+    }
+
+    .bowl-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+        padding: 0;
+    }
+
+    .bowl-btn:hover:not(:disabled) {
+        transform: translateY(-3px);
+    }
+
+    .bowl-btn:disabled {
+        cursor: default;
+    }
+
+    .bowl-btn svg {
+        width: 70px;
+        height: 50px;
+    }
+
+    .bowl-label {
+        font-family: 'Patrick Hand', cursive;
+        font-size: 0.85rem;
+        color: var(--text-soft);
+        margin-top: -2px;
+    }
+
+    @keyframes bowlWiggle {
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(-5deg); }
+        75% { transform: rotate(5deg); }
+    }
+
+    .bowl-btn.wiggling {
+        animation: bowlWiggle 0.3s ease-in-out infinite;
+    }
+
+    .bowl-btn.used {
+        opacity: 0.5;
+        cursor: default;
+        pointer-events: none;
+    }
+
+    /* Post-session overlay */
+    .session-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 100;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .session-overlay.active {
+        display: flex;
+    }
+
+    .session-overlay-card {
+        background: var(--card-cream);
+        padding: 40px 45px;
+        border-radius: 4px;
+        border: 3px solid var(--border-sketch);
+        text-align: center;
+        box-shadow: 6px 6px 0px var(--shadow-soft);
+        position: relative;
+        transform: rotate(0.5deg);
+        max-width: 380px;
+        width: 90%;
+    }
+
+    .session-overlay-card::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%) rotate(-2deg);
+        width: 80px;
+        height: 18px;
+        background: rgba(200, 190, 170, 0.6);
+        border-radius: 2px;
+    }
+
+    .session-overlay-title {
+        font-family: 'Patrick Hand', cursive;
+        font-size: 1.6rem;
+        color: var(--accent-brown);
+        margin-bottom: 6px;
+    }
+
+    .session-overlay-summary {
+        font-family: 'Nunito', sans-serif;
+        font-size: 1rem;
+        color: var(--text-soft);
+        margin-bottom: 25px;
+    }
+
+    .session-overlay-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .overlay-btn {
+        font-family: 'Patrick Hand', cursive;
+        padding: 14px 20px;
+        font-size: 1.15rem;
+        border: 2.5px solid var(--border-sketch);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 600;
+        box-shadow: 3px 3px 0px var(--shadow-soft);
+    }
+
+    .overlay-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 4px 4px 0px var(--shadow-soft);
+    }
+
+    .overlay-btn.repeat {
+        background: var(--card-green);
+        color: var(--text-dark);
+    }
+
+    .overlay-btn.repeat:hover {
+        background: var(--accent-green);
+        color: white;
+    }
+
+    .overlay-btn.custom {
+        background: var(--card-blue);
+        color: var(--text-dark);
+    }
+
+    .overlay-btn.custom:hover {
+        background: var(--accent-blue);
+        color: white;
+    }
+
+    .overlay-btn.end {
+        background: var(--card-pink);
+        color: var(--text-dark);
+    }
+
+    .overlay-btn.end:hover {
+        background: var(--accent-pink);
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .countdown {
+            font-size: 4.5rem;
+        }
+        .timer-display {
+            padding: 35px 30px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Cat bowls -->
+<div class="cat-bowls">
+    <div class="bowl-container">
+        <button class="bowl-btn water" id="waterBowl" disabled aria-label="Water bowl">
+            <svg viewBox="0 0 70 50">
+                <!-- Bowl outer -->
+                <ellipse cx="35" cy="42" rx="30" ry="7" fill="#7a8fa8"/>
+                <path d="M5,32 Q5,42 10,44 Q35,50 60,44 Q65,42 65,32 Z" fill="#8dabc4"/>
+                <ellipse cx="35" cy="32" rx="30" ry="9" fill="#a0bdd4"/>
+                <!-- Water inside -->
+                <ellipse cx="35" cy="32" rx="25" ry="7" fill="#c2daf0"/>
+                <!-- Water shimmer -->
+                <ellipse cx="28" cy="31" rx="7" ry="2.5" fill="#d4eaff" opacity="0.6"/>
+                <ellipse cx="42" cy="30" rx="5" ry="1.8" fill="#d4eaff" opacity="0.4"/>
+            </svg>
+        </button>
+        <span class="bowl-label">Water</span>
+    </div>
+    <div class="bowl-container">
+        <button class="bowl-btn food" id="foodBowl" disabled aria-label="Food bowl">
+            <svg viewBox="0 0 70 50">
+                <!-- Bowl outer -->
+                <ellipse cx="35" cy="42" rx="30" ry="7" fill="#a08872"/>
+                <path d="M5,32 Q5,42 10,44 Q35,50 60,44 Q65,42 65,32 Z" fill="#c49e8d"/>
+                <ellipse cx="35" cy="32" rx="30" ry="9" fill="#d4a882"/>
+                <!-- Bowl inside -->
+                <ellipse cx="35" cy="32" rx="25" ry="7" fill="#e8c9a0"/>
+                <!-- Kibble pieces -->
+                <circle cx="25" cy="30" r="3.5" fill="#8B6914"/>
+                <circle cx="35" cy="29" r="3.5" fill="#A0752E"/>
+                <circle cx="44" cy="31" r="3.5" fill="#8B6914"/>
+                <circle cx="30" cy="33" r="3" fill="#A0752E"/>
+                <circle cx="40" cy="28" r="3" fill="#8B6914"/>
+                <circle cx="33" cy="35" r="2.5" fill="#A0752E"/>
+            </svg>
+        </button>
+        <span class="bowl-label">Food</span>
+    </div>
+</div>
+
+<!-- Timer Display - centered on page -->
+<div class="timer-display">
+    <div class="phase-label focus" id="phaseLabel">Focus Time</div>
+    <div class="countdown" id="countdown">{{ session.focus_duration }}:00</div>
+    <div class="timer-controls">
+        <button class="control-btn start" id="startBtn">Start</button>
+        <button class="control-btn pause" id="pauseBtn" disabled>Pause</button>
+        <button class="control-btn stop" id="stopBtn" disabled>End Session</button>
+    </div>
+</div>
+
+<!-- Free-roaming cat canvas -->
+<canvas id="roamingCat" width="30" height="30"></canvas>
+<div id="catSpeech"></div>
+
+<!-- Camera Feed (if enabled) -->
+{% if session.camera_enabled %}
+<div class="camera-feed" id="cameraFeed">
+    <div class="camera-label">You're being watched</div>
+    <video id="video" autoplay playsinline muted></video>
+    <div class="detection-debug" id="detectionDebug">Waiting for detection...</div>
+    <div class="distraction-warning" id="distractionWarning">
+        <strong>Distraction detected!</strong> Put the phone away -- {{ cat.name }} is upset.
+    </div>
+</div>
+{% endif %}
+
+<!-- Confirm end session modal -->
+<div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-card">
+        <div class="confirm-msg">End this session?</div>
+        <div class="confirm-buttons">
+            <button class="confirm-yes" id="confirmYes">Yes, end it</button>
+            <button class="confirm-no" id="confirmNo">Keep studying</button>
+        </div>
+    </div>
+</div>
+
+<!-- Post-session overlay -->
+<div class="session-overlay" id="sessionOverlay">
+    <div class="session-overlay-card">
+        <div class="session-overlay-title">Session Complete!</div>
+        <div class="session-overlay-summary" id="overlaySummary">
+            {{ session.focus_duration }} minutes of focus time studied.
+        </div>
+        <div class="session-overlay-buttons">
+            <button class="overlay-btn repeat" id="repeatBtn">Start Another</button>
+            <button class="overlay-btn custom" id="customBtn">Custom Session</button>
+            <button class="overlay-btn end" id="endBtn">End Session</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const sessionId = {{ session.id }};
+    const focusDuration = {{ session.focus_duration }} * 60;
+    const breakDuration = {{ session.break_duration }} * 60;
+    const cameraEnabled = {{ 'true' if session.camera_enabled else 'false' }};
+
+    let currentPhase = 'focus';
+    let timeRemaining = focusDuration;
+    let timerInterval = null;
+    let isPaused = false;
+    let focusScore = 100;
+    let focusPhaseCompleted = false;
+
+    // DOM elements
+    const countdown = document.getElementById('countdown');
+    const phaseLabel = document.getElementById('phaseLabel');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const stopBtn = document.getElementById('stopBtn');
+
+    // ===== PIXEL ART CAT - FREE ROAMING =====
+    const catCanvas = document.getElementById('roamingCat');
+    const catCtx = catCanvas.getContext('2d');
+
+    // Cat position and movement -- use full viewport
+    const CAT_SIZE = 120;
+    const EDGE_PAD = 20;
+    let catX = EDGE_PAD + Math.random() * (window.innerWidth - CAT_SIZE - EDGE_PAD * 2);
+    let catY = EDGE_PAD + Math.random() * (window.innerHeight - CAT_SIZE - EDGE_PAD * 2);
+    let targetX = catX;
+    let targetY = catY;
+    let catDirection = 1;
+    let catAnimState = 'idle';
+    let catAnimFrame = 0;
+    let catAnimTick = 0;
+    let animationRAF = null;
+    let zzzOffset = 0;
+
+    // Random behavior system
+    let behaviorTimer = 0;        // frames left in current behavior
+    let behaviorLocked = false;   // true when timer controls the cat (pause = sleep)
+
+    let bowlTarget = null;       // 'water' or 'food' when cat is walking toward a bowl
+    let eatingTimer = 0;         // frames left in eating animation
+    const EATING_DURATION = 120; // ~2 seconds at 60fps
+
+    // Cat speech bubble
+    const catSpeechEl = document.getElementById('catSpeech');
+    let speechTimeout = null;
+    let focusMsgTimer = null;
+    const FOCUS_MESSAGES = ['Study!', 'Hey, focus!', 'Good!', 'Keep going!', 'You got this!'];
+
+    let catSpeed = 1.2;
+    const WALK_ANIM_SPEED = 8;
+    const SLEEP_ANIM_SPEED = 30;
+
+    // Pixel color palette — dynamic per cat type
+    const _ = null;
+    const catPalettes = {
+        1: { B: '#2c2c2c', L: '#3d3d3d', R: '#4a3f35' },  // Shadow (black)
+        2: { B: '#e8913a', L: '#c47a2e', R: '#b06820' },  // Ginger (orange)
+        3: { B: '#2c2c2c', L: '#f5f5f5', R: '#3d3d3d' },  // Mittens (tuxedo)
+        4: { B: '#9e9e9e', L: '#b8b8b8', R: '#888888' },  // Mochi (gray)
+        5: { B: '#e8913a', L: '#2c2c2c', R: '#f5f5f5' },  // Pepper (calico)
+        6: { B: '#f5eed8', L: '#e8dfc8', R: '#ddd0b8' },  // Tofu (cream)
+    };
+    const catType = {{ cat.cat_type }};
+    const palette = catPalettes[catType] || catPalettes[1];
+    const B = palette.B;
+    const L = palette.L;
+    const R = palette.R;
+    const E = '#f5efe0';
+    const P = '#1a1a1a';
+    const N = '#c49e8d';
+
+    // Walking frames (side-view cat, 14 rows x 16 cols)
+    const walkFrames = [
+        [
+            [_,_,_,B,_,_,_,B,_,_,_,_,_,_,_,_],
+            [_,_,B,B,B,_,B,B,B,_,_,_,_,_,_,_],
+            [_,_,B,R,B,B,B,R,B,_,_,_,_,_,_,_],
+            [_,B,B,B,B,B,B,B,B,B,_,_,_,_,_,_],
+            [_,B,B,E,P,B,B,P,E,B,_,_,_,_,_,_],
+            [_,B,B,B,B,N,B,B,B,B,_,_,_,_,_,_],
+            [_,_,B,B,B,B,B,B,B,_,_,_,_,_,_,_],
+            [_,_,_,_,B,B,B,B,B,B,B,_,_,_,_,_],
+            [_,_,_,B,B,B,B,B,B,B,B,B,_,_,_,_],
+            [_,_,_,B,B,B,B,B,B,B,B,B,_,_,_,_],
+            [_,_,_,B,L,L,L,L,L,L,B,B,_,_,_,_],
+            [_,_,_,B,B,_,_,_,_,B,B,_,_,_,_,_],
+            [_,_,_,B,B,_,_,_,_,B,B,_,_,_,_,_],
+            [_,_,_,_,_,_,_,_,_,_,_,B,B,B,_,_],
+        ],
+        [
+            [_,_,_,B,_,_,_,B,_,_,_,_,_,_,_,_],
+            [_,_,B,B,B,_,B,B,B,_,_,_,_,_,_,_],
+            [_,_,B,R,B,B,B,R,B,_,_,_,_,_,_,_],
+            [_,B,B,B,B,B,B,B,B,B,_,_,_,_,_,_],
+            [_,B,B,E,P,B,B,P,E,B,_,_,_,_,_,_],
+            [_,B,B,B,B,N,B,B,B,B,_,_,_,_,_,_],
+            [_,_,B,B,B,B,B,B,B,_,_,_,_,_,_,_],
+            [_,_,_,_,B,B,B,B,B,B,B,_,_,_,_,_],
+            [_,_,_,B,B,B,B,B,B,B,B,B,_,_,_,_],
+            [_,_,_,B,B,B,B,B,B,B,B,B,_,_,_,_],
+            [_,_,_,B,L,L,L,L,L,L,B,B,_,_,_,_],
+            [_,_,B,B,_,_,_,_,_,_,B,B,_,_,_,_],
+            [_,B,B,_,_,_,_,_,_,_,_,B,B,_,_,_],
+            [_,_,_,_,_,_,_,_,_,_,_,_,B,B,B,_],
+        ],
+        [
+            [_,_,_,B,_,_,_,B,_,_,_,_,_,_,_,_],
+            [_,_,B,B,B,_,B,B,B,_,_,_,_,_,_,_],
+            [_,_,B,R,B,B,B,R,B,_,_,_,_,_,_,_],
+            [_,B,B,B,B,B,B,B,B,B,_,_,_,_,_,_],
+            [_,B,B,E,P,B,B,P,E,B,_,_,_,_,_,_],
+            [_,B,B,B,B,N,B,B,B,B,_,_,_,_,_,_],
+            [_,_,B,B,B,B,B,B,B,_,_,_,_,_,_,_],
+            [_,_,_,_,B,B,B,B,B,B,B,_,_,_,_,_],
+            [_,_,_,B,B,B,B,B,B,B,B,B,_,_,_,_],
+            [_,_,_,B,B,B,B,B,B,B,B,B,_,_,_,_],
+            [_,_,_,B,L,L,L,L,L,L,B,B,_,_,_,_],
+            [_,_,_,_,B,B,_,_,B,B,_,_,_,_,_,_],
+            [_,_,_,_,B,B,_,_,B,B,_,_,_,_,_,_],
+            [_,_,_,_,_,_,_,_,_,_,B,B,B,_,_,_],
+        ],
+        [
+            [_,_,_,B,_,_,_,B,_,_,_,_,_,_,_,_],
+            [_,_,B,B,B,_,B,B,B,_,_,_,_,_,_,_],
+            [_,_,B,R,B,B,B,R,B,_,_,_,_,_,_,_],
+            [_,B,B,B,B,B,B,B,B,B,_,_,_,_,_,_],
+            [_,B,B,E,P,B,B,P,E,B,_,_,_,_,_,_],
+            [_,B,B,B,B,N,B,B,B,B,_,_,_,_,_,_],
+            [_,_,B,B,B,B,B,B,B,_,_,_,_,_,_,_],
+            [_,_,_,_,B,B,B,B,B,B,B,_,_,_,_,_],
+            [_,_,_,B,B,B,B,B,B,B,B,B,_,_,_,_],
+            [_,_,_,B,B,B,B,B,B,B,B,B,_,_,_,_],
+            [_,_,_,B,L,L,L,L,L,L,B,B,_,_,_,_],
+            [_,_,_,_,_,B,B,_,B,B,_,_,_,_,_,_],
+            [_,_,_,_,_,_,B,B,B,_,_,_,_,_,_,_],
+            [_,_,_,_,_,_,_,_,_,B,B,B,_,_,_,_],
+        ],
+    ];
+
+    // Sitting frame (cat loaf - compact, paws tucked)
+    const sitFrame = [
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        [_,_,_,B,_,_,_,B,_,_,_,_,_,_,_,_],
+        [_,_,B,B,B,_,B,B,B,_,_,_,_,_,_,_],
+        [_,_,B,R,B,B,B,R,B,_,_,_,_,_,_,_],
+        [_,B,B,B,B,B,B,B,B,B,_,_,_,_,_,_],
+        [_,B,B,E,P,B,B,P,E,B,_,_,_,_,_,_],
+        [_,B,B,B,B,N,B,B,B,B,_,_,_,_,_,_],
+        [_,_,B,B,B,B,B,B,B,B,B,_,_,_,_,_],
+        [_,_,_,B,B,B,B,B,B,B,B,B,_,_,_,_],
+        [_,_,_,B,B,B,B,B,B,B,B,B,_,_,_,_],
+        [_,_,_,B,L,L,L,L,L,L,B,B,_,_,_,_],
+        [_,_,_,B,B,B,B,B,B,B,B,B,B,_,_,_],
+        [_,_,_,_,_,_,_,_,_,_,_,B,B,B,_,_],
+    ];
+
+    // Sleeping frames (curled up cat)
+    const sleepFrames = [
+        [
+            [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+            [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+            [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+            [_,_,_,B,_,_,_,B,_,_,_,_,_,_,_,_],
+            [_,_,B,B,B,_,B,B,B,_,_,_,_,_,_,_],
+            [_,_,B,R,B,B,B,R,B,_,_,_,_,_,_,_],
+            [_,B,B,B,B,B,B,B,B,B,_,_,_,_,_,_],
+            [_,B,B,L,L,B,B,L,L,B,_,_,_,_,_,_],
+            [_,B,B,B,B,N,B,B,B,B,_,_,_,_,_,_],
+            [_,_,B,B,B,B,B,B,B,B,B,B,_,_,_,_],
+            [_,_,_,B,B,B,B,B,B,B,B,B,B,_,_,_],
+            [_,_,_,B,L,L,L,L,L,L,L,L,B,_,_,_],
+            [_,_,_,_,B,B,B,B,B,B,B,B,B,B,_,_],
+            [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        ],
+        [
+            [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+            [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+            [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+            [_,_,_,B,_,_,_,B,_,_,_,_,_,_,_,_],
+            [_,_,B,B,B,_,B,B,B,_,_,_,_,_,_,_],
+            [_,_,B,R,B,B,B,R,B,_,_,_,_,_,_,_],
+            [_,B,B,B,B,B,B,B,B,B,_,_,_,_,_,_],
+            [_,B,B,L,L,B,B,L,L,B,_,_,_,_,_,_],
+            [_,B,B,B,B,N,B,B,B,B,_,_,_,_,_,_],
+            [_,_,B,B,B,B,B,B,B,B,B,B,B,_,_,_],
+            [_,_,B,B,B,B,B,B,B,B,B,B,B,B,_,_],
+            [_,_,B,L,L,L,L,L,L,L,L,L,L,B,_,_],
+            [_,_,_,B,B,B,B,B,B,B,B,B,B,B,B,_],
+            [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+        ],
+    ];
+
+    // Pick a random spot anywhere on the viewport
+    function pickNewTarget() {
+        targetX = EDGE_PAD + Math.random() * (window.innerWidth - CAT_SIZE - EDGE_PAD * 2);
+        targetY = EDGE_PAD + Math.random() * (window.innerHeight - CAT_SIZE - EDGE_PAD * 2);
+        catSpeed = 0.6 + Math.random() * 1.2;
+    }
+
+    // Pick a random behavior and duration
+    function pickRandomBehavior() {
+        if (behaviorLocked) return;
+        const behaviors = ['walking', 'sitting', 'sleeping'];
+        const weights = [0.5, 0.25, 0.25]; // walk more often
+        let r = Math.random();
+        let chosen = 'walking';
+        let cumulative = 0;
+        for (let i = 0; i < behaviors.length; i++) {
+            cumulative += weights[i];
+            if (r < cumulative) { chosen = behaviors[i]; break; }
+        }
+
+        // Duration varies by behavior
+        if (chosen === 'sitting') {
+            // Sitting is brief: 3-6 seconds
+            behaviorTimer = (180 + Math.random() * 180) | 0;
+        } else {
+            // Walking/sleeping: 8-25 seconds
+            behaviorTimer = (480 + Math.random() * 1020) | 0;
+        }
+
+        catAnimState = chosen;
+        catAnimFrame = 0;
+        catAnimTick = 0;
+
+        // Randomly walk in front of or behind the timer box
+        if (Math.random() < 0.35) {
+            catCanvas.style.zIndex = '15'; // in front of timer
+        } else {
+            catCanvas.style.zIndex = '5';  // behind timer
+        }
+
+        if (chosen === 'walking') {
+            pickNewTarget();
+        } else if (chosen === 'sleeping') {
+            zzzOffset = 0;
+        }
+    }
+
+    // Draw sprite on canvas
+    function drawSprite(frameData) {
+        for (let row = 0; row < frameData.length; row++) {
+            for (let col = 0; col < frameData[row].length; col++) {
+                const color = frameData[row][col];
+                if (color) {
+                    catCtx.fillStyle = color;
+                    catCtx.fillRect(col, row + 8, 1, 1);
+                }
+            }
+        }
+    }
+
+    // Draw a tiny 3x3 pixel "z"
+    function drawPixelZ(x, y, color) {
+        catCtx.fillStyle = color;
+        catCtx.fillRect(x, y, 3, 1);
+        catCtx.fillRect(x + 1, y + 1, 1, 1);
+        catCtx.fillRect(x, y + 2, 3, 1);
+    }
+
+    // Show a speech bubble above the cat (not while sleeping)
+    function showCatSpeech(msg, duration) {
+        if (catAnimState === 'sleeping') return;
+        duration = duration || 2000;
+        catSpeechEl.textContent = msg;
+        catSpeechEl.classList.add('visible');
+        // Position above the cat
+        catSpeechEl.style.left = (catX + CAT_SIZE / 2 - 20) + 'px';
+        catSpeechEl.style.top = (catY - 30) + 'px';
+
+        if (speechTimeout) clearTimeout(speechTimeout);
+        speechTimeout = setTimeout(() => {
+            catSpeechEl.classList.remove('visible');
+            speechTimeout = null;
+        }, duration);
+    }
+
+    // Update speech bubble position each frame (called from animation loop)
+    function updateSpeechPosition() {
+        if (catSpeechEl.classList.contains('visible')) {
+            catSpeechEl.style.left = (catX + CAT_SIZE / 2 - 20) + 'px';
+            catSpeechEl.style.top = (catY - 30) + 'px';
+        }
+    }
+
+    // Schedule periodic focus-phase messages
+    function startFocusMessages() {
+        stopFocusMessages();
+        // First message after 30-60 seconds, then every 45-90 seconds
+        function scheduleNext() {
+            const delay = (45 + Math.random() * 45) * 1000;
+            focusMsgTimer = setTimeout(() => {
+                if (currentPhase === 'focus' && !isPaused && timerInterval) {
+                    const msg = FOCUS_MESSAGES[Math.floor(Math.random() * FOCUS_MESSAGES.length)];
+                    showCatSpeech(msg, 2500);
+                }
+                scheduleNext();
+            }, delay);
+        }
+        // Initial delay before first message
+        focusMsgTimer = setTimeout(() => {
+            if (currentPhase === 'focus' && !isPaused && timerInterval) {
+                const msg = FOCUS_MESSAGES[Math.floor(Math.random() * FOCUS_MESSAGES.length)];
+                showCatSpeech(msg, 2500);
+            }
+            scheduleNext();
+        }, (30 + Math.random() * 30) * 1000);
+    }
+
+    function stopFocusMessages() {
+        if (focusMsgTimer) {
+            clearTimeout(focusMsgTimer);
+            focusMsgTimer = null;
+        }
+    }
+
+    // Main animation loop
+    function animationLoop() {
+        catAnimTick++;
+
+        // Count down behavior timer and switch when done
+        if (!behaviorLocked) {
+            behaviorTimer--;
+            if (behaviorTimer <= 0) {
+                // If walking and haven't reached target yet, keep going
+                if (catAnimState === 'walking') {
+                    const dx = targetX - catX;
+                    const dy = targetY - catY;
+                    if (Math.sqrt(dx * dx + dy * dy) > 10) {
+                        behaviorTimer = 120; // give extra time to reach target
+                    } else {
+                        pickRandomBehavior();
+                    }
+                } else {
+                    pickRandomBehavior();
+                }
+            }
+        }
+
+        if (catAnimState === 'walking') {
+            const dx = targetX - catX;
+            const dy = targetY - catY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // Use wider arrival radius for bowl walks
+            const arriveRadius = (bowlTarget !== null) ? 15 : 5;
+
+            if (dist < arriveRadius) {
+                if (bowlTarget !== null) {
+                    // Arrived at bowl -- snap to target and start eating
+                    catX = targetX;
+                    catY = targetY;
+                    catCanvas.style.left = catX + 'px';
+                    catCanvas.style.top = catY + 'px';
+                    catAnimState = 'eating';
+                    eatingTimer = EATING_DURATION;
+                    catAnimFrame = 0;
+                    catAnimTick = 0;
+                    showCatSpeech(bowlTarget === 'food' ? 'Yum!' : 'Slurp!', 1800);
+                } else if (!behaviorLocked) {
+                    pickRandomBehavior();
+                } else {
+                    pickNewTarget();
+                }
+            } else {
+                // No wobble when walking to bowl (go straight there)
+                const wobble = (bowlTarget !== null) ? 0 : (Math.random() - 0.5) * 0.3;
+                catX += (dx / dist) * catSpeed + wobble;
+                catY += (dy / dist) * catSpeed + wobble;
+
+                // Clamp to viewport (allow near edge when walking to bowl)
+                const xMax = (bowlTarget !== null) ? window.innerWidth - 10 : window.innerWidth - CAT_SIZE - EDGE_PAD;
+                catX = Math.max(EDGE_PAD, Math.min(catX, xMax));
+                const yMax = (bowlTarget !== null) ? window.innerHeight - 10 : window.innerHeight - CAT_SIZE - EDGE_PAD;
+                catY = Math.max(EDGE_PAD, Math.min(catY, yMax));
+
+                if (Math.abs(dx) > 0.5) {
+                    catDirection = dx > 0 ? 1 : -1;
+                }
+
+                if (catAnimTick % WALK_ANIM_SPEED === 0) {
+                    catAnimFrame = (catAnimFrame + 1) % walkFrames.length;
+                }
+
+                catCtx.clearRect(0, 0, 30, 30);
+                catCtx.save();
+                if (catDirection === -1) {
+                    catCtx.translate(30, 0);
+                    catCtx.scale(-1, 1);
+                }
+                drawSprite(walkFrames[catAnimFrame % walkFrames.length]);
+                catCtx.restore();
+            }
+
+            catCanvas.style.left = catX + 'px';
+            catCanvas.style.top = catY + 'px';
+
+        } else if (catAnimState === 'sleeping') {
+            if (catAnimTick % SLEEP_ANIM_SPEED === 0) {
+                catAnimFrame = (catAnimFrame + 1) % sleepFrames.length;
+            }
+
+            catCtx.clearRect(0, 0, 30, 30);
+            catCtx.save();
+            if (catDirection === -1) {
+                catCtx.translate(30, 0);
+                catCtx.scale(-1, 1);
+            }
+            drawSprite(sleepFrames[catAnimFrame % sleepFrames.length]);
+            catCtx.restore();
+
+            // Floating zzz
+            var z1y = 8 - Math.round(Math.sin(zzzOffset) * 1);
+            var z2y = 5 - Math.round(Math.sin(zzzOffset + 1) * 1);
+            var z3y = 2 - Math.round(Math.sin(zzzOffset + 2) * 1);
+            drawPixelZ(20, z1y, '#9b8b7a');
+            drawPixelZ(23, z2y, '#b8a898');
+            drawPixelZ(26, z3y, '#d5c8b8');
+            zzzOffset += 0.05;
+
+        } else if (catAnimState === 'sitting') {
+            catCtx.clearRect(0, 0, 30, 30);
+            catCtx.save();
+            if (catDirection === -1) {
+                catCtx.translate(30, 0);
+                catCtx.scale(-1, 1);
+            }
+            drawSprite(sitFrame);
+            catCtx.restore();
+
+        } else if (catAnimState === 'eating') {
+            eatingTimer--;
+            catCtx.clearRect(0, 0, 30, 30);
+            catCtx.save();
+            if (catDirection === -1) {
+                catCtx.translate(30, 0);
+                catCtx.scale(-1, 1);
+            }
+            // Head-bob effect to simulate eating/drinking
+            let bobOffset = (Math.floor(catAnimTick / 15) % 2 === 0) ? 0 : -1;
+            catCtx.translate(0, bobOffset);
+            drawSprite(sitFrame);
+            catCtx.restore();
+
+            if (eatingTimer <= 0) {
+                finishEating();
+            }
+
+        } else {
+            // idle fallback
+            catCtx.clearRect(0, 0, 30, 30);
+            catCtx.save();
+            if (catDirection === -1) {
+                catCtx.translate(30, 0);
+                catCtx.scale(-1, 1);
+            }
+            drawSprite(walkFrames[0]);
+            catCtx.restore();
+        }
+
+        updateSpeechPosition();
+        animationRAF = requestAnimationFrame(animationLoop);
+    }
+
+    // Force a specific state (used by timer pause/start)
+    function setCatAnimation(state) {
+        // Cancel any in-progress bowl walk or eating
+        if (bowlTarget !== null) {
+            bowlTarget = null;
+            eatingTimer = 0;
+            updateBowlState();
+        }
+
+        if (state === 'walking') {
+            behaviorLocked = false;
+            pickRandomBehavior(); // let her do her own thing
+        } else if (state === 'sleeping') {
+            behaviorLocked = true;
+            catAnimState = 'sleeping';
+            catAnimFrame = 0;
+            catAnimTick = 0;
+            zzzOffset = 0;
+        } else {
+            behaviorLocked = false;
+            catAnimState = state;
+            catAnimFrame = 0;
+            catAnimTick = 0;
+        }
+    }
+
+    // Format time as MM:SS
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Update countdown display
+    function updateDisplay() {
+        countdown.textContent = formatTime(timeRemaining);
+    }
+
+    // Start timer
+    function startTimer() {
+        if (timerInterval) return;
+
+        startBtn.disabled = true;
+        pauseBtn.disabled = false;
+        stopBtn.disabled = false;
+
+        timerInterval = setInterval(() => {
+            if (!isPaused) {
+                timeRemaining--;
+                updateDisplay();
+
+                if (timeRemaining <= 0) {
+                    if (currentPhase === 'focus') {
+                        completeFocusPhase();
+                    } else {
+                        completeBreakPhase();
+                    }
+                }
+            }
+        }, 1000);
+
+        setCatAnimation('walking');
+
+        // Start or stop focus-phase cat messages
+        if (currentPhase === 'focus') {
+            startFocusMessages();
+        } else {
+            stopFocusMessages();
+        }
+
+        // Enable/disable bowls based on phase
+        updateBowlState();
+
+        {% if session.camera_enabled %}
+        startCamera();
+        {% endif %}
+    }
+
+    // Pause timer
+    function pauseTimer() {
+        isPaused = !isPaused;
+        pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
+        setCatAnimation(isPaused ? 'sleeping' : 'walking');
+    }
+
+    // Stop session -- show custom confirm modal
+    function stopSession() {
+        document.getElementById('confirmOverlay').classList.add('active');
+    }
+
+    document.getElementById('confirmYes').addEventListener('click', () => {
+        document.getElementById('confirmOverlay').classList.remove('active');
+        completeSession();
+    });
+
+    document.getElementById('confirmNo').addEventListener('click', () => {
+        document.getElementById('confirmOverlay').classList.remove('active');
+    });
+
+    // Complete focus phase — auto-start break timer
+    function completeFocusPhase() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        focusPhaseCompleted = true;
+        stopFocusMessages();
+
+        currentPhase = 'break';
+        timeRemaining = breakDuration;
+        updateDisplay();
+        phaseLabel.textContent = 'Break Time!';
+        phaseLabel.classList.remove('focus');
+        phaseLabel.classList.add('break');
+
+        // Reset bowls for the new break phase
+        resetBowls();
+
+        // Auto-start the break countdown
+        startTimer();
+    }
+
+    // Complete break phase — show post-session overlay
+    function completeBreakPhase() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        startBtn.disabled = true;
+        pauseBtn.disabled = true;
+        stopBtn.disabled = true;
+
+        completeSessionAPI(function() {
+            showPostSessionOverlay();
+        });
+    }
+
+    // Complete session via API (used by both break-end and manual stop)
+    function completeSessionAPI(callback) {
+        stopFocusMessages();
+        {% if session.camera_enabled %}
+        stopMotionDetection();
+        {% endif %}
+        if (animationRAF) {
+            cancelAnimationFrame(animationRAF);
+        }
+
+        // Calculate actual minutes studied
+        let actualMinutes;
+        if (focusPhaseCompleted) {
+            actualMinutes = {{ session.focus_duration }};
+        } else {
+            actualMinutes = Math.round((focusDuration - timeRemaining) / 60);
+        }
+
+        fetch(`/api/complete-session/{{ session.id }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                focus_score: focusScore,
+                actual_duration: actualMinutes
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (callback) {
+                callback(data);
+            } else {
+                window.location.href = '{{ url_for("main.dashboard") }}';
+            }
+        });
+    }
+
+    // Show post-session overlay
+    function showPostSessionOverlay() {
+        document.getElementById('sessionOverlay').classList.add('active');
+    }
+
+    // Manual stop — complete and go straight to dashboard
+    function completeSession() {
+        completeSessionAPI(null);
+    }
+
+    // Camera setup with motion detection (if enabled)
+    {% if session.camera_enabled %}
+    let cameraStarted = false;
+    let motionDetectionInterval = null;
+    let distractionCooldown = false;
+    let cocoModel = null;
+
+    async function startCamera() {
+        if (cameraStarted) return;
+        cameraStarted = true;
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user' }
+            });
+            const video = document.getElementById('video');
+            video.srcObject = stream;
+            document.getElementById('cameraFeed').classList.add('active');
+
+            // Load COCO-SSD model for phone detection
+            const feedLabel = document.querySelector('.camera-label');
+            feedLabel.textContent = 'Loading detection model...';
+            feedLabel.style.color = 'var(--accent-brown)';
+
+            try {
+                cocoModel = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
+                feedLabel.textContent = 'Focus tracking active';
+                feedLabel.style.color = 'var(--accent-green)';
+                startObjectDetection();
+            } catch (modelErr) {
+                console.error('Failed to load COCO-SSD model:', modelErr);
+                feedLabel.textContent = 'Detection unavailable';
+                feedLabel.style.color = 'var(--accent-pink)';
+            }
+        } catch (err) {
+            console.error('Camera access denied:', err);
+            const feed = document.getElementById('cameraFeed');
+            feed.classList.add('active');
+            const label = feed.querySelector('.camera-label');
+            label.textContent = 'Camera access denied';
+            label.style.color = 'var(--accent-pink)';
+        }
+    }
+
+    // Start camera immediately on page load so user sees it right away
+    startCamera();
+
+    function startObjectDetection() {
+        const video = document.getElementById('video');
+        const feedLabel = document.querySelector('.camera-label');
+        const debugEl = document.getElementById('detectionDebug');
+        const PHONE_CLASSES = ['cell phone', 'remote', 'book', 'laptop', 'mouse', 'keyboard'];
+
+        // Run detection every 2 seconds (COCO-SSD is heavier than pixel math)
+        motionDetectionInterval = setInterval(async () => {
+            // Skip if not in focus phase or paused
+            if (isPaused || currentPhase !== 'focus' || !timerInterval) return;
+            if (!cocoModel || video.readyState < 2) return;
+
+            try {
+                const predictions = await cocoModel.detect(video);
+
+                // Debug: show all detected objects
+                if (predictions.length > 0) {
+                    const summary = predictions.map(p =>
+                        p.class + ' (' + Math.round(p.score * 100) + '%)'
+                    ).join(', ');
+                    debugEl.textContent = 'Sees: ' + summary;
+                } else {
+                    debugEl.textContent = 'No objects detected';
+                }
+
+                // Look for phone/tablet-like objects with lower threshold
+                const phoneDetected = predictions.some(p =>
+                    PHONE_CLASSES.includes(p.class) && p.score > 0.3
+                );
+
+                if (phoneDetected && !distractionCooldown) {
+                    triggerDistraction();
+                }
+            } catch (e) {
+                debugEl.textContent = 'Detection error';
+            }
+        }, 2000);
+    }
+
+    function triggerDistraction() {
+        distractionCooldown = true;
+
+        // Show warning
+        const warning = document.getElementById('distractionWarning');
+        warning.classList.add('active');
+
+        // Cat says "Bad!"
+        showCatSpeech('Bad!', 3000);
+
+        // Decrease focus score
+        focusScore = Math.max(0, focusScore - 5);
+
+        // Hide warning after 4 seconds, cooldown for 10 seconds
+        setTimeout(() => {
+            warning.classList.remove('active');
+        }, 4000);
+        setTimeout(() => {
+            distractionCooldown = false;
+        }, 10000);
+    }
+
+    function stopMotionDetection() {
+        if (motionDetectionInterval) {
+            clearInterval(motionDetectionInterval);
+            motionDetectionInterval = null;
+        }
+    }
+    {% endif %}
+
+    // ===== CAT BOWLS =====
+    const waterBowl = document.getElementById('waterBowl');
+    const foodBowl = document.getElementById('foodBowl');
+
+    let waterUsed = false;
+    let foodUsed = false;
+
+    function updateBowlState() {
+        const isBreak = currentPhase === 'break' && timerInterval !== null;
+        // Keep both disabled while cat is walking to or eating at a bowl
+        if (bowlTarget !== null) {
+            waterBowl.disabled = true;
+            foodBowl.disabled = true;
+            return;
+        }
+        waterBowl.disabled = !isBreak || waterUsed;
+        foodBowl.disabled = !isBreak || foodUsed;
+    }
+
+    function resetBowls() {
+        waterUsed = false;
+        foodUsed = false;
+        waterBowl.classList.remove('used');
+        foodBowl.classList.remove('used');
+    }
+
+    // Finish eating animation -- fire API and mark bowl as used
+    function finishEating() {
+        if (bowlTarget === 'water') {
+            fetch('/api/cat/play', { method: 'POST' }).catch(() => {});
+            waterUsed = true;
+            waterBowl.classList.add('wiggling');
+            setTimeout(() => {
+                waterBowl.classList.remove('wiggling');
+                waterBowl.classList.add('used');
+            }, 600);
+        } else if (bowlTarget === 'food') {
+            fetch('/api/cat/feed', { method: 'POST' }).catch(() => {});
+            foodUsed = true;
+            foodBowl.classList.add('wiggling');
+            setTimeout(() => {
+                foodBowl.classList.remove('wiggling');
+                foodBowl.classList.add('used');
+            }, 600);
+        }
+
+        showCatSpeech('Thanks!', 2000);
+
+        bowlTarget = null;
+        behaviorLocked = false;
+        catCanvas.style.zIndex = '5';
+        updateBowlState();
+        pickRandomBehavior();
+    }
+
+    // Send cat walking to a bowl
+    function startBowlWalk(type) {
+        if (bowlTarget !== null) return;
+
+        // Read positions BEFORE disabling
+        const waterRect = waterBowl.getBoundingClientRect();
+        const foodRect = foodBowl.getBoundingClientRect();
+
+        // Disable both bowls to prevent double-clicks
+        waterBowl.disabled = true;
+        foodBowl.disabled = true;
+
+        // Pick the correct bowl's position
+        const bowlRect = (type === 'water') ? waterRect : foodRect;
+
+        // Place cat right at the bowl, overlapping slightly
+        targetX = bowlRect.left + bowlRect.width / 2 - CAT_SIZE / 2;
+        targetY = bowlRect.top - CAT_SIZE + 70;
+
+        // Allow cat to go right up to the screen edge for bowls
+        targetX = Math.max(0, Math.min(targetX, window.innerWidth - 10));
+        targetY = Math.max(0, Math.min(targetY, window.innerHeight - 10));
+
+        bowlTarget = type;
+        behaviorLocked = true;
+        catAnimState = 'walking';
+        catAnimFrame = 0;
+        catAnimTick = 0;
+        catSpeed = 2.5;
+        catCanvas.style.zIndex = '25';
+    }
+
+    // Water bowl: click to send cat to drink
+    waterBowl.addEventListener('click', () => {
+        if (waterBowl.disabled || waterUsed || bowlTarget !== null) return;
+        startBowlWalk('water');
+    });
+
+    // Food bowl: click to send cat to eat
+    foodBowl.addEventListener('click', () => {
+        if (foodBowl.disabled || foodUsed || bowlTarget !== null) return;
+        startBowlWalk('food');
+    });
+
+    // Event listeners
+    startBtn.addEventListener('click', startTimer);
+    pauseBtn.addEventListener('click', pauseTimer);
+    stopBtn.addEventListener('click', stopSession);
+
+    // Post-session overlay buttons
+    document.getElementById('repeatBtn').addEventListener('click', function() {
+        this.disabled = true;
+        fetch('/api/create-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                focus_duration: {{ session.focus_duration }},
+                break_duration: {{ session.break_duration }},
+                camera_enabled: {{ 'true' if session.camera_enabled else 'false' }}
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            window.location.href = '/timer/' + data.session_id;
+        });
+    });
+
+    document.getElementById('customBtn').addEventListener('click', function() {
+        window.location.href = '{{ url_for("main.timer_setup") }}';
+    });
+
+    document.getElementById('endBtn').addEventListener('click', function() {
+        window.location.href = '{{ url_for("main.dashboard") }}';
+    });
+
+    // Handle window resize - keep cat in bounds
+    window.addEventListener('resize', () => {
+        catX = Math.min(catX, window.innerWidth - CAT_SIZE - EDGE_PAD);
+        catY = Math.min(catY, window.innerHeight - CAT_SIZE - EDGE_PAD);
+    });
+
+    // Initialize
+    updateDisplay();
+    catCanvas.style.left = catX + 'px';
+    catCanvas.style.top = catY + 'px';
+    pickRandomBehavior();
+    animationLoop();
+</script>
+{% endblock %}
