@@ -23,6 +23,7 @@ instance/
 # IDE settings
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~
