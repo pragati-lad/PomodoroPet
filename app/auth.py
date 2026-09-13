@@ -5,6 +5,7 @@ from itsdangerous import URLSafeTimedSerializer
 from app import db, mail
 from app.models import User
 from urllib.parse import urlparse
+from threading import Thread
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -24,8 +25,14 @@ def verify_token(token, max_age=3600):
         return None
 
 
+def send_async_email(app, msg):
+    """Send email in background with Flask app context."""
+    with app.app_context():
+        mail.send(msg)
+
+
 def send_verification_email(user):
-    """Send a verification email with a tokenized link."""
+    """Send a verification email with a tokenized link (async)."""
     token = generate_verification_token(user.email)
     verify_url = url_for('auth.verify_email', token=token, _external=True)
     msg = Message('Verify your PomoPet account', recipients=[user.email])
@@ -36,7 +43,8 @@ def send_verification_email(user):
         f"This link expires in 1 hour.\n\n"
         f"- PomoPet"
     )
-    mail.send(msg)
+    # Send email in background thread (doesn't block signup)
+    Thread(target=send_async_email, args=(current_app._get_current_object(), msg)).start()
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
