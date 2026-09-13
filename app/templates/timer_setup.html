@@ -8,21 +8,40 @@
         max-width: 600px;
         margin: 50px auto;
         padding: 40px;
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        background: var(--card-cream);
+        border-radius: 4px;
+        border: 2.5px solid var(--border-sketch);
+        box-shadow: 5px 5px 0px var(--shadow-soft);
+        position: relative;
+        transform: rotate(-0.5deg);
+    }
+
+    .setup-container::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%) rotate(2deg);
+        width: 80px;
+        height: 18px;
+        background: rgba(200, 190, 170, 0.6);
+        border-radius: 2px;
     }
 
     .setup-container h1 {
+        font-family: 'Patrick Hand', cursive;
         text-align: center;
-        color: #333;
+        color: var(--text-dark);
         margin-bottom: 10px;
+        font-size: 2rem;
     }
 
-    .setup-container p {
+    .setup-container > p {
+        font-family: 'Patrick Hand', cursive;
         text-align: center;
-        color: #666;
+        color: var(--text-soft);
         margin-bottom: 40px;
+        font-size: 1.1rem;
     }
 
     .mode-selection {
@@ -33,22 +52,26 @@
     }
 
     .mode-card {
+        font-family: 'Patrick Hand', cursive;
         padding: 30px 20px;
-        border: 3px solid #e0e0e0;
-        border-radius: 15px;
+        border: 2.5px solid var(--border-sketch);
+        border-radius: 12px;
         text-align: center;
         cursor: pointer;
         transition: all 0.3s;
+        background: white;
+        box-shadow: 3px 3px 0px var(--shadow-soft);
     }
 
     .mode-card:hover {
-        border-color: #ff9800;
-        transform: translateY(-3px);
+        border-color: var(--accent-green);
+        transform: translateY(-3px) rotate(-2deg);
+        box-shadow: 5px 5px 0px var(--shadow-soft);
     }
 
     .mode-card.selected {
-        border-color: #ff9800;
-        background: #fff3e0;
+        border-color: var(--accent-green);
+        background: var(--card-green);
     }
 
     .mode-icon {
@@ -59,21 +82,22 @@
     .mode-title {
         font-size: 1.3rem;
         font-weight: bold;
-        color: #333;
+        color: var(--text-dark);
         margin-bottom: 10px;
     }
 
     .mode-description {
-        font-size: 0.9rem;
-        color: #666;
+        font-size: 0.95rem;
+        color: var(--text-soft);
     }
 
     .custom-inputs {
         display: none;
         margin-bottom: 30px;
         padding: 20px;
-        background: #f5f5f5;
-        border-radius: 10px;
+        background: var(--card-pink);
+        border-radius: 4px;
+        border: 2px dashed var(--border-sketch);
     }
 
     .custom-inputs.active {
@@ -91,42 +115,50 @@
     }
 
     .form-group label {
+        font-family: 'Patrick Hand', cursive;
         display: block;
         margin-bottom: 8px;
         font-weight: 600;
-        color: #555;
+        color: var(--text-dark);
+        font-size: 1.1rem;
     }
 
     .form-group input {
         width: 100%;
         padding: 12px;
         font-size: 1rem;
-        border: 2px solid #e0e0e0;
+        font-family: 'Nunito', sans-serif;
+        border: 2px solid var(--border-sketch);
         border-radius: 8px;
         box-sizing: border-box;
+        background: white;
     }
 
     .form-group input:focus {
         outline: none;
-        border-color: #ff9800;
+        border-color: var(--accent-green);
+        box-shadow: 0 0 0 3px rgba(138, 158, 120, 0.2);
     }
 
     .camera-option {
         margin-bottom: 30px;
         padding: 20px;
-        background: #e3f2fd;
-        border-radius: 10px;
-        border: 2px solid #2196f3;
+        background: var(--card-blue);
+        border-radius: 4px;
+        border: 2.5px solid var(--border-sketch);
+        box-shadow: 3px 3px 0px var(--shadow-soft);
     }
 
     .camera-option h3 {
-        color: #1976d2;
+        font-family: 'Patrick Hand', cursive;
+        color: var(--text-dark);
         margin-bottom: 10px;
-        font-size: 1.2rem;
+        font-size: 1.3rem;
     }
 
     .camera-option p {
-        color: #555;
+        font-family: 'Nunito', sans-serif;
+        color: var(--text-soft);
         font-size: 0.95rem;
         margin-bottom: 15px;
         text-align: left;
@@ -138,47 +170,63 @@
     }
 
     .camera-btn {
+        font-family: 'Patrick Hand', cursive;
         flex: 1;
         padding: 12px;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
+        border: 2.5px solid var(--border-sketch);
+        border-radius: 12px;
         background: white;
         cursor: pointer;
         transition: all 0.3s;
+        box-shadow: 2px 2px 0px var(--shadow-soft);
     }
 
     .camera-btn:hover {
-        border-color: #2196f3;
+        border-color: var(--accent-blue);
+        transform: translateY(-2px);
+        box-shadow: 4px 4px 0px var(--shadow-soft);
     }
 
     .camera-btn.selected {
-        border-color: #2196f3;
-        background: #e3f2fd;
+        border-color: var(--accent-blue);
+        background: var(--card-blue);
         font-weight: bold;
     }
 
     .btn {
+        font-family: 'Patrick Hand', cursive;
         width: 100%;
         padding: 15px;
-        font-size: 1.2rem;
-        border: none;
-        border-radius: 10px;
+        font-size: 1.3rem;
+        border: 2.5px solid var(--border-sketch);
+        border-radius: 12px;
         cursor: pointer;
         transition: all 0.3s;
+        box-shadow: 3px 3px 0px var(--shadow-soft);
     }
 
     .btn-primary {
-        background: #ff9800;
-        color: white;
+        background: var(--card-green);
+        color: var(--text-dark);
+        font-weight: bold;
     }
 
     .btn-primary:hover {
-        background: #f57c00;
+        background: var(--accent-green);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 5px 5px 0px var(--shadow-soft);
+    }
+
+    .btn-primary:active {
+        transform: translateY(1px);
+        box-shadow: 1px 1px 0px var(--shadow-soft);
     }
 
     .btn-primary:disabled {
         background: #ccc;
         cursor: not-allowed;
+        transform: none;
     }
 </style>
 {% endblock %}
@@ -192,12 +240,10 @@
         <!-- Mode Selection -->
         <div class="mode-selection">
             <div class="mode-card" data-mode="default">
-                <div class="mode-icon">⏰</div>
                 <div class="mode-title">Default Mode</div>
                 <div class="mode-description">45 min focus<br>15 min break</div>
             </div>
             <div class="mode-card" data-mode="custom">
-                <div class="mode-icon">⚙️</div>
                 <div class="mode-title">Custom Mode</div>
                 <div class="mode-description">Set your own<br>intervals</div>
             </div>
@@ -221,18 +267,16 @@
 
         <!-- Camera Option -->
         <div class="camera-option">
-            <h3>📸 Focus Tracking (Optional)</h3>
+            <h3>Focus Tracking (Optional)</h3>
             <p>Enable camera to detect phone usage during focus time. Your video stays private and is not recorded.</p>
             <div class="camera-toggle">
                 <button type="button" class="camera-btn selected" data-camera="off">
-                    <div style="font-size: 2rem; margin-bottom: 5px;">🔒</div>
                     Camera OFF<br>
-                    <small style="color: #999;">Trust mode</small>
+                    <small style="color: var(--text-soft);">Trust mode</small>
                 </button>
                 <button type="button" class="camera-btn" data-camera="on">
-                    <div style="font-size: 2rem; margin-bottom: 5px;">📹</div>
                     Camera ON<br>
-                    <small style="color: #999;">Phone detection</small>
+                    <small style="color: var(--text-soft);">Phone detection</small>
                 </button>
             </div>
             <input type="hidden" name="camera" id="cameraInput" value="off">

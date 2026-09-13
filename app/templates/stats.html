@@ -11,59 +11,246 @@
     }
 
     .stats-header {
-        background: white;
+        background: var(--card-cream);
         padding: 30px;
-        border-radius: 20px;
+        border-radius: 4px;
+        border: 2.5px solid var(--border-sketch);
+        box-shadow: 5px 5px 0px var(--shadow-soft);
         margin-bottom: 30px;
         text-align: center;
+        position: relative;
+        transform: rotate(-0.5deg);
     }
 
+    .stats-header::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%) rotate(2deg);
+        width: 80px;
+        height: 18px;
+        background: rgba(200, 190, 170, 0.6);
+        border-radius: 2px;
+    }
+
+    .stats-header h1 {
+        font-family: 'Patrick Hand', cursive;
+        color: var(--text-dark);
+        margin-bottom: 10px;
+        font-size: 2rem;
+    }
+
+    .stats-header p {
+        font-family: 'Patrick Hand', cursive;
+        color: var(--text-soft);
+        font-size: 1.1rem;
+    }
+
+    /* --- Overview stat boxes --- */
     .stats-overview {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 20px;
         margin-bottom: 30px;
     }
 
     .stat-box {
-        background: white;
-        padding: 30px;
-        border-radius: 15px;
+        background: var(--card-pink);
+        padding: 25px 15px;
+        border-radius: 4px;
+        border: 2.5px solid var(--border-sketch);
         text-align: center;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 4px 4px 0px var(--shadow-soft);
+        position: relative;
+        transform: rotate(0.5deg);
     }
 
-    .stat-box-icon {
-        font-size: 3rem;
-        margin-bottom: 15px;
+    .stat-box:nth-child(1) { background: var(--card-pink); transform: rotate(-1deg); }
+    .stat-box:nth-child(2) { background: var(--card-blue); transform: rotate(1deg); }
+    .stat-box:nth-child(3) { background: var(--card-lavender); transform: rotate(-0.5deg); }
+    .stat-box:nth-child(4) { background: var(--card-green); transform: rotate(0.8deg); }
+    .stat-box:nth-child(5) { background: var(--card-cream); transform: rotate(-0.7deg); }
+
+    .stat-box::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%) rotate(-2deg);
+        width: 60px;
+        height: 16px;
+        background: rgba(200, 190, 170, 0.6);
+        border-radius: 2px;
     }
 
     .stat-box-value {
+        font-family: 'Patrick Hand', cursive;
         font-size: 2.5rem;
         font-weight: bold;
-        color: #333;
+        color: var(--text-dark);
         margin-bottom: 10px;
     }
 
     .stat-box-label {
-        font-size: 1rem;
-        color: #666;
+        font-family: 'Nunito', sans-serif;
+        font-size: 0.95rem;
+        color: var(--text-soft);
     }
 
-    .sessions-list {
-        background: white;
+    /* --- Paper card (shared style for chart sections) --- */
+    .paper-card {
+        background: var(--card-cream);
         padding: 30px;
-        border-radius: 20px;
+        border-radius: 4px;
+        border: 2.5px solid var(--border-sketch);
+        box-shadow: 4px 4px 0px var(--shadow-soft);
+        position: relative;
+        margin-bottom: 30px;
     }
 
-    .sessions-list h2 {
+    .paper-card::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%) rotate(-1deg);
+        width: 60px;
+        height: 16px;
+        background: rgba(200, 190, 170, 0.6);
+        border-radius: 2px;
+    }
+
+    .paper-card h2 {
+        font-family: 'Patrick Hand', cursive;
         margin-bottom: 20px;
-        color: #333;
+        color: var(--text-dark);
+        font-size: 1.8rem;
+        border-bottom: 2px dashed var(--border-sketch);
+        padding-bottom: 10px;
+    }
+
+    /* --- This Week: vertical bar chart --- */
+    .week-chart {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-around;
+        height: 200px;
+        padding: 10px 0;
+        border-bottom: 2px solid var(--border-sketch);
+        margin-bottom: 10px;
+        transform: rotate(0.5deg);
+    }
+
+    .week-chart .day-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        max-width: 80px;
+    }
+
+    .week-chart .bar-value {
+        font-family: 'Patrick Hand', cursive;
+        font-size: 0.9rem;
+        color: var(--text-soft);
+        margin-bottom: 4px;
+    }
+
+    .week-chart .bar {
+        width: 36px;
+        background: var(--accent-green);
+        border: 2px solid var(--border-sketch);
+        border-radius: 4px 4px 0 0;
+        min-height: 4px;
+        transition: height 0.3s;
+    }
+
+    .week-chart .bar.today {
+        background: var(--accent-brown);
+    }
+
+    .week-chart .bar.empty {
+        background: var(--card-green);
+        border-style: dashed;
+    }
+
+    .week-chart .day-label {
+        font-family: 'Patrick Hand', cursive;
+        font-size: 1rem;
+        margin-top: 8px;
+        color: var(--text-dark);
+    }
+
+    .week-chart .day-label.today {
+        font-weight: bold;
+        color: var(--accent-brown);
+    }
+
+    /* --- Last 4 Weeks: horizontal bar chart --- */
+    .weekly-chart {
+        transform: rotate(-0.3deg);
+    }
+
+    .weekly-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+
+    .weekly-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .weekly-label {
+        font-family: 'Patrick Hand', cursive;
+        width: 90px;
+        flex-shrink: 0;
+        font-size: 1rem;
+        color: var(--text-dark);
+        text-align: right;
+        padding-right: 15px;
+    }
+
+    .weekly-bar-track {
+        flex: 1;
+        height: 28px;
+        background: var(--bg-cream);
+        border: 2px solid var(--border-sketch);
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .weekly-bar-fill {
+        height: 100%;
+        background: var(--accent-blue);
+        border-radius: 2px;
+        min-width: 2px;
+        transition: width 0.3s;
+    }
+
+    .weekly-bar-fill.current {
+        background: var(--accent-green);
+    }
+
+    .weekly-info {
+        font-family: 'Patrick Hand', cursive;
+        width: 120px;
+        flex-shrink: 0;
+        padding-left: 12px;
+        font-size: 0.95rem;
+        color: var(--text-soft);
+    }
+
+    /* --- Session list --- */
+    .sessions-list {
+        transform: rotate(0.5deg);
     }
 
     .session-item {
         padding: 15px;
-        border-bottom: 1px solid #e0e0e0;
+        border-bottom: 1px dashed var(--border-sketch);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -74,47 +261,86 @@
     }
 
     .session-date {
-        color: #666;
+        font-family: 'Nunito', sans-serif;
+        color: var(--text-soft);
         font-size: 0.9rem;
     }
 
     .session-duration {
+        font-family: 'Patrick Hand', cursive;
         font-weight: bold;
-        color: #ff9800;
+        color: var(--accent-brown);
+        font-size: 1.1rem;
+    }
+
+    .session-planned {
+        font-family: 'Nunito', sans-serif;
+        color: var(--text-soft);
+        font-size: 0.85rem;
     }
 
     .session-score {
-        background: #4caf50;
+        font-family: 'Patrick Hand', cursive;
+        background: var(--accent-green);
         color: white;
         padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 0.9rem;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        border: 2px solid var(--border-sketch);
+        flex-shrink: 0;
     }
 
     .session-score.low {
-        background: #f44336;
+        background: var(--accent-pink);
     }
 
     .session-score.medium {
-        background: #ff9800;
+        background: var(--accent-brown);
     }
 
     .no-sessions {
+        font-family: 'Patrick Hand', cursive;
         text-align: center;
         padding: 40px;
-        color: #999;
+        color: var(--text-soft);
+        font-size: 1.1rem;
     }
 
     .back-link {
+        font-family: 'Patrick Hand', cursive;
         display: inline-block;
         margin-top: 20px;
-        color: #ff9800;
+        color: var(--accent-green);
         text-decoration: none;
         font-weight: 600;
+        font-size: 1.1rem;
+        border-bottom: 2px dashed var(--accent-green);
     }
 
     .back-link:hover {
-        text-decoration: underline;
+        color: var(--text-dark);
+        border-bottom-style: solid;
+    }
+
+    /* --- Charts grid layout --- */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 800px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+        .weekly-info {
+            width: 80px;
+            font-size: 0.85rem;
+        }
+        .weekly-label {
+            width: 70px;
+        }
     }
 </style>
 {% endblock %}
@@ -127,32 +353,71 @@
         <p>Track your progress with {{ cat.name }}</p>
     </div>
 
-    <!-- Overview Stats -->
+    <!-- Overview Stats (5 boxes) -->
     <div class="stats-overview">
         <div class="stat-box">
-            <div class="stat-box-icon">📚</div>
             <div class="stat-box-value">{{ total_sessions }}</div>
             <div class="stat-box-label">Total Sessions</div>
         </div>
         <div class="stat-box">
-            <div class="stat-box-icon">⏱️</div>
             <div class="stat-box-value">{{ total_focus_time }}</div>
             <div class="stat-box-label">Total Minutes</div>
         </div>
         <div class="stat-box">
-            <div class="stat-box-icon">🎯</div>
             <div class="stat-box-value">{{ "%.0f"|format(avg_focus_score) }}%</div>
             <div class="stat-box-label">Avg Focus Score</div>
         </div>
         <div class="stat-box">
-            <div class="stat-box-icon">🐱</div>
             <div class="stat-box-value">{{ cat.age_days }}</div>
             <div class="stat-box-label">Cat Age (days)</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-box-value">{{ streak }}</div>
+            <div class="stat-box-label">Day Streak</div>
+        </div>
+    </div>
+
+    <!-- Charts: This Week + Last 4 Weeks side by side -->
+    <div class="charts-grid">
+        <!-- This Week -->
+        <div class="paper-card" style="transform: rotate(0.5deg);">
+            <h2>This Week</h2>
+            <div class="week-chart">
+                {% for day in week_days %}
+                <div class="day-col">
+                    {% if day.minutes > 0 %}
+                    <div class="bar-value">{{ day.minutes }}m</div>
+                    {% endif %}
+                    <div class="bar {{ 'today' if day.is_today else '' }} {{ 'empty' if day.minutes == 0 else '' }}"
+                         style="height: {{ (day.minutes / week_max * 160)|int if day.minutes > 0 else 4 }}px;">
+                    </div>
+                    <div class="day-label {{ 'today' if day.is_today else '' }}">{{ day.label }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Last 4 Weeks -->
+        <div class="paper-card" style="transform: rotate(-0.5deg);">
+            <h2>Last 4 Weeks</h2>
+            <div class="weekly-chart">
+                {% for week in weeks %}
+                <div class="weekly-row">
+                    <div class="weekly-label">{{ week.label }}</div>
+                    <div class="weekly-bar-track">
+                        <div class="weekly-bar-fill {{ 'current' if loop.last else '' }}"
+                             style="width: {{ (week.minutes / weeks_max * 100)|int if week.minutes > 0 else 0 }}%;">
+                        </div>
+                    </div>
+                    <div class="weekly-info">{{ week.minutes }}m / {{ week.count }}s</div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
 
     <!-- Recent Sessions -->
-    <div class="sessions-list">
+    <div class="paper-card sessions-list">
         <h2>Recent Study Sessions</h2>
 
         {% if sessions %}
@@ -163,7 +428,14 @@
                         {{ session.completed_at.strftime('%B %d, %Y at %I:%M %p') if session.completed_at else 'In Progress' }}
                     </div>
                     <div class="session-duration">
-                        {{ session.focus_duration }} min focus / {{ session.break_duration }} min break
+                        {% if session.actual_duration is not none %}
+                            {{ session.actual_duration }}m studied
+                            {% if session.actual_duration != session.focus_duration %}
+                                <span class="session-planned">({{ session.focus_duration }}m planned)</span>
+                            {% endif %}
+                        {% else %}
+                            {{ session.focus_duration }}m focus / {{ session.break_duration }}m break
+                        {% endif %}
                     </div>
                 </div>
                 <div class="session-score {% if session.focus_score < 50 %}low{% elif session.focus_score < 80 %}medium{% endif %}">
@@ -179,7 +451,7 @@
     </div>
 
     <div style="text-align: center;">
-        <a href="{{ url_for('main.dashboard') }}" class="back-link">← Back to Dashboard</a>
+        <a href="{{ url_for('main.dashboard') }}" class="back-link">Back to Dashboard</a>
     </div>
 </div>
 {% endblock %}

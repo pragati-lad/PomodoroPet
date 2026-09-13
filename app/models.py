@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -9,6 +9,8 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
+    email_verified = db.Column(db.Boolean, default=False, nullable=False)
+    daily_goal = db.Column(db.Integer, default=60, nullable=False)  # Daily study goal in minutes
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -32,7 +34,7 @@ class Cat(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     name = db.Column(db.String(64), nullable=False)
-    cat_type = db.Column(db.Integer, nullable=False)  # 1-10 for personality types
+    cat_type = db.Column(db.Integer, nullable=False)  # 1-6 for personality types
     age_days = db.Column(db.Integer, default=0)  # Age in "cat days"
     mood = db.Column(db.String(20), default='happy')  # happy, neutral, sad, angry
     hunger = db.Column(db.Integer, default=50)  # 0-100
@@ -40,20 +42,17 @@ class Cat(db.Model):
     size = db.Column(db.Float, default=1.0)  # Growth multiplier
     last_fed = db.Column(db.DateTime, default=datetime.utcnow)
     last_interaction = db.Column(db.DateTime, default=datetime.utcnow)
+    last_growth_date = db.Column(db.Date, nullable=True)  # Last real date the cat aged
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Cat personalities (1-10)
+    # Cat personalities (1-6)
     CAT_PERSONALITIES = {
         1: {'name': 'Shadow', 'trait': 'Mysterious and independent'},
         2: {'name': 'Ginger', 'trait': 'Energetic and demanding'},
-        3: {'name': 'Luna', 'trait': 'Calm and zen'},
-        4: {'name': 'Mittens', 'trait': 'Playful and mischievous'},
-        5: {'name': 'Whiskers', 'trait': 'Loyal and clingy'},
-        6: {'name': 'Neko', 'trait': 'Smart and curious'},
-        7: {'name': 'Mochi', 'trait': 'Lazy and sleepy'},
-        8: {'name': 'Pepper', 'trait': 'Sassy and moody'},
-        9: {'name': 'Tofu', 'trait': 'Gentle and supportive'},
-        10: {'name': 'Bandit', 'trait': 'Adventurous and playful'}
+        3: {'name': 'Mittens', 'trait': 'Playful and mischievous'},
+        4: {'name': 'Mochi', 'trait': 'Lazy and sleepy'},
+        5: {'name': 'Pepper', 'trait': 'Sassy and moody'},
+        6: {'name': 'Tofu', 'trait': 'Gentle and supportive'}
     }
 
     def get_growth_stage(self):
@@ -125,22 +124,41 @@ class StudySession(db.Model):
     break_duration = db.Column(db.Integer, default=15)  # Minutes
     completed = db.Column(db.Boolean, default=False)
     focus_score = db.Column(db.Integer, default=100)  # 0-100, based on distractions
+    actual_duration = db.Column(db.Integer, nullable=True)  # Actual minutes studied
     camera_enabled = db.Column(db.Boolean, default=False)
     started_at = db.Column(db.DateTime, default=datetime.utcnow)
     completed_at = db.Column(db.DateTime)
 
-    def complete_session(self, focus_score=100):
-        """Mark session as completed"""
+    def complete_session(self, focus_score=100, actual_duration=None):
+        """Mark session as completed and reward cat if daily goal is met"""
         self.completed = True
         self.focus_score = focus_score
+        self.actual_duration = actual_duration
         self.completed_at = datetime.utcnow()
 
-        # Reward cat for completed session
         cat = self.user.cat
         if cat:
-            cat.age_days += 1  # Cat grows!
+            # Always reward happiness and size per session
             cat.happiness = min(100, cat.happiness + 15)
-            cat.size = min(2.0, cat.size + 0.02)  # Gradual growth
+            cat.size = min(2.0, cat.size + 0.02)
+
+            # Cat ages only if daily goal is met AND hasn't grown today
+            today = datetime.utcnow().date()
+            if cat.last_growth_date != today:
+                # Sum all completed sessions today (including this one)
+                this_duration = actual_duration or self.focus_duration
+                total_today = this_duration
+                for s in self.user.study_sessions.filter(
+                    StudySession.completed == True,
+                    StudySession.id != self.id
+                ).all():
+                    if s.completed_at and s.completed_at.date() == today:
+                        total_today += (s.actual_duration or s.focus_duration)
+
+                if total_today >= self.user.daily_goal:
+                    cat.age_days += 1
+                    cat.last_growth_date = today
+
             cat.update_mood()
 
     def __repr__(self):

@@ -12,44 +12,70 @@
     }
 
     .cat-selection-container h1 {
+        font-family: 'Patrick Hand', cursive;
         font-size: 2.5rem;
         margin-bottom: 10px;
-        color: #333;
+        color: var(--text-dark);
     }
 
-    .cat-selection-container p {
+    .cat-selection-container > p {
+        font-family: 'Patrick Hand', cursive;
         font-size: 1.2rem;
-        color: #666;
+        color: var(--text-soft);
         margin-bottom: 40px;
     }
 
     .cats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
         gap: 30px;
         margin-bottom: 40px;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    @media (max-width: 600px) {
+        .cats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
 
     .cat-card {
-        background: white;
-        border: 3px solid #e0e0e0;
-        border-radius: 15px;
+        background: var(--card-cream);
+        border: 2.5px solid var(--border-sketch);
+        border-radius: 4px;
         padding: 20px;
         cursor: pointer;
         transition: all 0.3s ease;
         position: relative;
+        box-shadow: 3px 3px 0px var(--shadow-soft);
+        transform: rotate(0deg);
+    }
+
+    .cat-card::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%) rotate(-1deg);
+        width: 50px;
+        height: 14px;
+        background: rgba(200, 190, 170, 0.6);
+        border-radius: 2px;
     }
 
     .cat-card:hover {
-        transform: translateY(-5px);
-        border-color: #ff9800;
-        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.3);
+        transform: translateY(-5px) rotate(-2deg);
+        border-color: var(--accent-green);
+        box-shadow: 5px 5px 0px var(--shadow-soft);
     }
 
     .cat-card.selected {
-        border-color: #ff9800;
-        background: #fff3e0;
-        box-shadow: 0 10px 30px rgba(255, 152, 0, 0.4);
+        border-color: var(--accent-green);
+        background: var(--card-green);
+        box-shadow: 5px 5px 0px var(--shadow-soft);
+        transform: rotate(2deg);
     }
 
     .cat-icon {
@@ -164,15 +190,17 @@
     .cat-striped { background: repeating-linear-gradient(90deg, #8b6f47, #8b6f47 10px, #6d5638 10px, #6d5638 20px); }
 
     .cat-name {
+        font-family: 'Patrick Hand', cursive;
         font-size: 1.3rem;
         font-weight: bold;
-        color: #333;
+        color: var(--text-dark);
         margin: 10px 0 5px;
     }
 
     .cat-trait {
+        font-family: 'Nunito', sans-serif;
         font-size: 0.9rem;
-        color: #666;
+        color: var(--text-soft);
         font-style: italic;
     }
 
@@ -181,9 +209,24 @@
         max-width: 500px;
         margin: 40px auto;
         padding: 30px;
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        background: var(--card-pink);
+        border-radius: 4px;
+        border: 2.5px solid var(--border-sketch);
+        box-shadow: 5px 5px 0px var(--shadow-soft);
+        position: relative;
+        transform: rotate(-1deg);
+    }
+
+    .name-input-section::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%) rotate(2deg);
+        width: 70px;
+        height: 16px;
+        background: rgba(200, 190, 170, 0.6);
+        border-radius: 2px;
     }
 
     .name-input-section.active {
@@ -191,8 +234,10 @@
     }
 
     .name-input-section h2 {
+        font-family: 'Patrick Hand', cursive;
         margin-bottom: 20px;
-        color: #333;
+        color: var(--text-dark);
+        font-size: 1.8rem;
     }
 
     .form-group {
@@ -200,47 +245,242 @@
     }
 
     .form-group label {
+        font-family: 'Patrick Hand', cursive;
         display: block;
         margin-bottom: 8px;
         font-weight: 600;
-        color: #555;
+        color: var(--text-dark);
+        font-size: 1.1rem;
     }
 
     .form-group input {
         width: 100%;
         padding: 12px;
         font-size: 1rem;
-        border: 2px solid #e0e0e0;
+        font-family: 'Nunito', sans-serif;
+        border: 2px solid var(--border-sketch);
         border-radius: 8px;
         box-sizing: border-box;
+        background: white;
     }
 
     .form-group input:focus {
         outline: none;
-        border-color: #ff9800;
+        border-color: var(--accent-green);
+        box-shadow: 0 0 0 3px rgba(138, 158, 120, 0.2);
     }
 
     .btn {
+        font-family: 'Patrick Hand', cursive;
         padding: 12px 30px;
-        font-size: 1.1rem;
-        border: none;
-        border-radius: 8px;
+        font-size: 1.2rem;
+        border: 2.5px solid var(--border-sketch);
+        border-radius: 12px;
         cursor: pointer;
         transition: all 0.3s;
+        box-shadow: 3px 3px 0px var(--shadow-soft);
     }
 
     .btn-primary {
-        background: #ff9800;
-        color: white;
+        background: var(--card-green);
+        color: var(--text-dark);
+        font-weight: bold;
     }
 
     .btn-primary:hover {
-        background: #f57c00;
+        background: var(--accent-green);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 5px 5px 0px var(--shadow-soft);
+    }
+
+    .btn-primary:active {
+        transform: translateY(1px);
+        box-shadow: 1px 1px 0px var(--shadow-soft);
+    }
+
+    /* Goal Setting Modal */
+    .goal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .goal-overlay.hidden {
+        display: none;
+    }
+
+    .goal-modal {
+        background: var(--card-cream);
+        border: 2.5px solid var(--border-sketch);
+        border-radius: 4px;
+        box-shadow: 6px 6px 0px var(--shadow-soft);
+        padding: 40px;
+        max-width: 480px;
+        width: 100%;
+        text-align: center;
+        position: relative;
+        transform: rotate(-0.5deg);
+    }
+
+    .goal-modal::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%) rotate(2deg);
+        width: 80px;
+        height: 18px;
+        background: rgba(200, 190, 170, 0.6);
+        border-radius: 2px;
+    }
+
+    .goal-modal h2 {
+        font-family: 'Patrick Hand', cursive;
+        font-size: 2rem;
+        color: var(--text-dark);
+        margin-bottom: 8px;
+    }
+
+    .goal-modal p {
+        font-family: 'Patrick Hand', cursive;
+        color: var(--text-soft);
+        font-size: 1.1rem;
+        margin-bottom: 25px;
+    }
+
+    .goal-presets {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .goal-preset-btn {
+        font-family: 'Patrick Hand', cursive;
+        padding: 14px;
+        font-size: 1.15rem;
+        border: 2.5px solid var(--border-sketch);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 3px 3px 0px var(--shadow-soft);
+        background: var(--card-cream);
+        color: var(--text-dark);
+    }
+
+    .goal-preset-btn:hover {
+        background: var(--card-green);
+        transform: translateY(-2px);
+        box-shadow: 4px 4px 0px var(--shadow-soft);
+    }
+
+    .goal-preset-btn.selected {
+        background: var(--accent-green);
+        color: white;
+        border-color: var(--accent-green);
+    }
+
+    .goal-custom {
+        margin-top: 15px;
+        border-top: 2px dashed var(--border-sketch);
+        padding-top: 15px;
+    }
+
+    .goal-custom label {
+        font-family: 'Patrick Hand', cursive;
+        font-size: 1rem;
+        color: var(--text-soft);
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .goal-custom input {
+        width: 100px;
+        padding: 10px;
+        font-size: 1.1rem;
+        font-family: 'Nunito', sans-serif;
+        border: 2px solid var(--border-sketch);
+        border-radius: 8px;
+        text-align: center;
+        background: white;
+    }
+
+    .goal-custom input:focus {
+        outline: none;
+        border-color: var(--accent-green);
+        box-shadow: 0 0 0 3px rgba(138, 158, 120, 0.2);
+    }
+
+    .goal-custom span {
+        font-family: 'Patrick Hand', cursive;
+        font-size: 1.1rem;
+        color: var(--text-soft);
+        margin-left: 8px;
+    }
+
+    .goal-confirm-btn {
+        font-family: 'Patrick Hand', cursive;
+        margin-top: 25px;
+        padding: 14px 40px;
+        font-size: 1.3rem;
+        font-weight: bold;
+        background: var(--card-green);
+        color: var(--text-dark);
+        border: 2.5px solid var(--border-sketch);
+        border-radius: 12px;
+        cursor: pointer;
+        box-shadow: 3px 3px 0px var(--shadow-soft);
+        transition: all 0.3s;
+    }
+
+    .goal-confirm-btn:hover {
+        background: var(--accent-green);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 5px 5px 0px var(--shadow-soft);
+    }
+
+    .goal-confirm-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Daily Goal Modal -->
+<div class="goal-overlay" id="goalOverlay">
+    <div class="goal-modal">
+        <h2>Set Your Daily Goal</h2>
+        <p>How many hours do you want to study each day? Your cat grows 1 day older when you hit your goal!</p>
+
+        <div class="goal-presets">
+            <button class="goal-preset-btn" data-hours="1">1 hr</button>
+            <button class="goal-preset-btn" data-hours="2">2 hrs</button>
+            <button class="goal-preset-btn" data-hours="3">3 hrs</button>
+            <button class="goal-preset-btn" data-hours="4">4 hrs</button>
+        </div>
+
+        <div class="goal-custom">
+            <label>Or set a custom goal:</label>
+            <input type="number" id="customGoalInput" min="1" max="8" step="0.5" placeholder="1.5">
+            <span>hours</span>
+        </div>
+
+        <button class="goal-confirm-btn" id="goalConfirmBtn" disabled>Set Goal</button>
+    </div>
+</div>
+
 <div class="cat-selection-container">
     <h1>Choose Your Companion</h1>
     <p>Select a cat that matches your personality!</p>
@@ -292,31 +532,8 @@
             <div class="cat-trait">Energetic & Demanding</div>
         </div>
 
-        <!-- Cat 3: Luna -->
+        <!-- Cat 3: Mittens -->
         <div class="cat-card" data-cat-type="3">
-            <div class="cat-icon cat-sleepy">
-                <div class="cat-ears">
-                    <div class="cat-ear left cat-white"></div>
-                    <div class="cat-ear right cat-white"></div>
-                </div>
-                <div class="cat-head cat-white"></div>
-                <div class="cat-eyes">
-                    <div class="cat-eye"></div>
-                    <div class="cat-eye"></div>
-                </div>
-                <div class="cat-whiskers">
-                    <div class="whisker left-1"></div>
-                    <div class="whisker left-2"></div>
-                    <div class="whisker right-1"></div>
-                    <div class="whisker right-2"></div>
-                </div>
-            </div>
-            <div class="cat-name">Luna</div>
-            <div class="cat-trait">Calm & Zen</div>
-        </div>
-
-        <!-- Cat 4: Mittens -->
-        <div class="cat-card" data-cat-type="4">
             <div class="cat-icon cat-wink">
                 <div class="cat-ears">
                     <div class="cat-ear left cat-tuxedo"></div>
@@ -338,54 +555,8 @@
             <div class="cat-trait">Playful & Mischievous</div>
         </div>
 
-        <!-- Cat 5: Whiskers -->
-        <div class="cat-card" data-cat-type="5">
-            <div class="cat-icon cat-happy">
-                <div class="cat-ears">
-                    <div class="cat-ear left cat-tabby"></div>
-                    <div class="cat-ear right cat-tabby"></div>
-                </div>
-                <div class="cat-head cat-tabby"></div>
-                <div class="cat-eyes">
-                    <div class="cat-eye"><div class="cat-pupil"></div></div>
-                    <div class="cat-eye"><div class="cat-pupil"></div></div>
-                </div>
-                <div class="cat-whiskers">
-                    <div class="whisker left-1"></div>
-                    <div class="whisker left-2"></div>
-                    <div class="whisker right-1"></div>
-                    <div class="whisker right-2"></div>
-                </div>
-            </div>
-            <div class="cat-name">Whiskers</div>
-            <div class="cat-trait">Loyal & Clingy</div>
-        </div>
-
-        <!-- Cat 6: Neko -->
-        <div class="cat-card" data-cat-type="6">
-            <div class="cat-icon">
-                <div class="cat-ears">
-                    <div class="cat-ear left cat-siamese"></div>
-                    <div class="cat-ear right cat-siamese"></div>
-                </div>
-                <div class="cat-head cat-siamese"></div>
-                <div class="cat-eyes">
-                    <div class="cat-eye"><div class="cat-pupil"></div></div>
-                    <div class="cat-eye"><div class="cat-pupil"></div></div>
-                </div>
-                <div class="cat-whiskers">
-                    <div class="whisker left-1"></div>
-                    <div class="whisker left-2"></div>
-                    <div class="whisker right-1"></div>
-                    <div class="whisker right-2"></div>
-                </div>
-            </div>
-            <div class="cat-name">Neko</div>
-            <div class="cat-trait">Smart & Curious</div>
-        </div>
-
-        <!-- Cat 7: Mochi -->
-        <div class="cat-card" data-cat-type="7">
+        <!-- Cat 4: Mochi -->
+        <div class="cat-card" data-cat-type="4">
             <div class="cat-icon cat-sleepy">
                 <div class="cat-ears">
                     <div class="cat-ear left cat-gray"></div>
@@ -407,8 +578,8 @@
             <div class="cat-trait">Lazy & Sleepy</div>
         </div>
 
-        <!-- Cat 8: Pepper -->
-        <div class="cat-card" data-cat-type="8">
+        <!-- Cat 5: Pepper -->
+        <div class="cat-card" data-cat-type="5">
             <div class="cat-icon cat-grumpy">
                 <div class="cat-ears">
                     <div class="cat-ear left cat-calico"></div>
@@ -430,8 +601,8 @@
             <div class="cat-trait">Sassy & Moody</div>
         </div>
 
-        <!-- Cat 9: Tofu -->
-        <div class="cat-card" data-cat-type="9">
+        <!-- Cat 6: Tofu -->
+        <div class="cat-card" data-cat-type="6">
             <div class="cat-icon">
                 <div class="cat-ears">
                     <div class="cat-ear left cat-cream"></div>
@@ -452,29 +623,6 @@
             <div class="cat-name">Tofu</div>
             <div class="cat-trait">Gentle & Supportive</div>
         </div>
-
-        <!-- Cat 10: Bandit -->
-        <div class="cat-card" data-cat-type="10">
-            <div class="cat-icon cat-happy">
-                <div class="cat-ears">
-                    <div class="cat-ear left cat-striped"></div>
-                    <div class="cat-ear right cat-striped"></div>
-                </div>
-                <div class="cat-head cat-striped"></div>
-                <div class="cat-eyes">
-                    <div class="cat-eye"><div class="cat-pupil"></div></div>
-                    <div class="cat-eye"><div class="cat-pupil"></div></div>
-                </div>
-                <div class="cat-whiskers">
-                    <div class="whisker left-1"></div>
-                    <div class="whisker left-2"></div>
-                    <div class="whisker right-1"></div>
-                    <div class="whisker right-2"></div>
-                </div>
-            </div>
-            <div class="cat-name">Bandit</div>
-            <div class="cat-trait">Adventurous & Playful</div>
-        </div>
     </div>
 
     <!-- Name input section (hidden initially) -->
@@ -494,27 +642,61 @@
 
 {% block extra_js %}
 <script>
-    // Cat selection logic
+    // ===== GOAL MODAL =====
+    const goalOverlay = document.getElementById('goalOverlay');
+    const goalConfirmBtn = document.getElementById('goalConfirmBtn');
+    const presetBtns = document.querySelectorAll('.goal-preset-btn');
+    const customGoalInput = document.getElementById('customGoalInput');
+    let selectedGoal = 0;
+
+    presetBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            presetBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedGoal = parseFloat(btn.getAttribute('data-hours')) * 60;
+            customGoalInput.value = '';
+            goalConfirmBtn.disabled = false;
+        });
+    });
+
+    customGoalInput.addEventListener('input', () => {
+        const val = parseFloat(customGoalInput.value);
+        if (val >= 0.5) {
+            presetBtns.forEach(b => b.classList.remove('selected'));
+            selectedGoal = Math.round(val * 60);
+            goalConfirmBtn.disabled = false;
+        } else {
+            selectedGoal = 0;
+            goalConfirmBtn.disabled = true;
+        }
+    });
+
+    goalConfirmBtn.addEventListener('click', () => {
+        if (selectedGoal < 10) return;
+
+        // Save goal via API
+        fetch('/api/set-goal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ daily_goal: selectedGoal })
+        })
+        .then(r => r.json())
+        .then(data => {
+            goalOverlay.classList.add('hidden');
+        });
+    });
+
+    // ===== CAT SELECTION =====
     const catCards = document.querySelectorAll('.cat-card');
     const nameSection = document.getElementById('nameSection');
     const catTypeInput = document.getElementById('catTypeInput');
 
     catCards.forEach(card => {
         card.addEventListener('click', () => {
-            // Remove selected class from all cards
             catCards.forEach(c => c.classList.remove('selected'));
-
-            // Add selected class to clicked card
             card.classList.add('selected');
-
-            // Set cat type value
-            const catType = card.getAttribute('data-cat-type');
-            catTypeInput.value = catType;
-
-            // Show name input section
+            catTypeInput.value = card.getAttribute('data-cat-type');
             nameSection.classList.add('active');
-
-            // Scroll to name section
             nameSection.scrollIntoView({ behavior: 'smooth' });
         });
     });

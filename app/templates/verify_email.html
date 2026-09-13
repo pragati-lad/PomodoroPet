@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Check Your Email - PomoPet{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box">
+        <h1>Check Your Email</h1>
+        <p>We sent a verification link to your inbox</p>
+
+        <div class="verify-details">
+            {% if email %}
+            <p class="verify-email-address">{{ email }}</p>
+            {% endif %}
+            <p class="verify-instruction">
+                Click the link in the email to verify your account.
+                The link expires in 1 hour.
+            </p>
+            <p class="verify-hint">
+                Don't see it? Check your spam folder.
+            </p>
+        </div>
+
+        <div class="verify-actions">
+            {% if email %}
+            <a href="{{ url_for('auth.resend_verification', email=email) }}" class="btn btn-secondary">Resend Verification Email</a>
+            {% endif %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Back to Login</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .verify-details {
+        background: var(--card-blue);
+        border: 2px dashed var(--border-sketch);
+        border-radius: 8px;
+        padding: 25px 20px;
+        margin: 25px 0;
+        text-align: center;
+        transform: rotate(0.5deg);
+    }
+
+    .verify-email-address {
+        font-family: 'Nunito', sans-serif;
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--text-dark);
+        margin-bottom: 12px;
+        word-break: break-all;
+    }
+
+    .verify-instruction {
+        font-family: 'Patrick Hand', cursive;
+        color: var(--text-dark);
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+    }
+
+    .verify-hint {
+        font-family: 'Patrick Hand', cursive;
+        color: var(--text-soft);
+        font-size: 0.95rem;
+    }
+
+    .verify-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .verify-actions .btn {
+        text-align: center;
+        width: 100%;
+    }
+</style>
+{% endblock %}

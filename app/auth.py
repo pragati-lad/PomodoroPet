@@ -1,10 +1,43 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_user, logout_user, current_user
-from app import db
+from flask_mail import Message
+from itsdangerous import URLSafeTimedSerializer
+from app import db, mail
 from app.models import User
-from werkzeug.urls import url_parse
+from urllib.parse import urlparse
 
 auth_bp = Blueprint('auth', __name__)
+
+
+def generate_verification_token(email):
+    """Generate a timed token for email verification."""
+    s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+    return s.dumps(email, salt='email-verify')
+
+
+def verify_token(token, max_age=3600):
+    """Verify a token and return the email, or None if invalid/expired."""
+    s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+    try:
+        return s.loads(token, salt='email-verify', max_age=max_age)
+    except Exception:
+        return None
+
+
+def send_verification_email(user):
+    """Send a verification email with a tokenized link."""
+    token = generate_verification_token(user.email)
+    verify_url = url_for('auth.verify_email', token=token, _external=True)
+    msg = Message('Verify your PomoPet account', recipients=[user.email])
+    msg.body = (
+        f"Hi {user.username},\n\n"
+        f"Click the link below to verify your email:\n"
+        f"{verify_url}\n\n"
+        f"This link expires in 1 hour.\n\n"
+        f"- PomoPet"
+    )
+    mail.send(msg)
+
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -13,9 +46,13 @@ def login():
         return redirect(url_for('main.dashboard'))
 
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        remember = request.form.get('remember', False)
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        remember = request.form.get('remember') == 'on'
+
+        if not username or not password:
+            flash('Please enter both username and password', 'error')
+            return redirect(url_for('auth.login'))
 
         user = User.query.filter_by(username=username).first()
 
@@ -23,11 +60,15 @@ def login():
             flash('Invalid username or password', 'error')
             return redirect(url_for('auth.login'))
 
+        if not user.email_verified:
+            flash('Please verify your email before logging in. Check your inbox for the verification link.', 'error')
+            return redirect(url_for('auth.login'))
+
         login_user(user, remember=remember)
 
         # Redirect to next page or dashboard
         next_page = request.args.get('next')
-        if not next_page or url_parse(next_page).netloc != '':
+        if not next_page or urlparse(next_page).netloc != '':
             next_page = url_for('main.dashboard')
 
         return redirect(next_page)
@@ -42,14 +83,22 @@ def signup():
         return redirect(url_for('main.dashboard'))
 
     if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        password_confirm = request.form.get('password_confirm')
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        password_confirm = request.form.get('password_confirm', '')
 
         # Validation
         if not username or not email or not password:
             flash('All fields are required', 'error')
+            return redirect(url_for('auth.signup'))
+
+        if len(username) < 3:
+            flash('Username must be at least 3 characters', 'error')
+            return redirect(url_for('auth.signup'))
+
+        if len(password) < 6:
+            flash('Password must be at least 6 characters', 'error')
             return redirect(url_for('auth.signup'))
 
         if password != password_confirm:
@@ -64,16 +113,73 @@ def signup():
             flash('Email already registered', 'error')
             return redirect(url_for('auth.signup'))
 
-        # Create new user
+        # Create new user (email_verified defaults to False)
         user = User(username=username, email=email)
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
 
-        flash('Account created successfully! Please log in.', 'success')
-        return redirect(url_for('auth.login'))
+        # Send verification email
+        send_verification_email(user)
+
+        flash('Account created! Please check your email to verify your account.', 'success')
+        return redirect(url_for('auth.check_email', email=email))
 
     return render_template('signup.html')
+
+
+@auth_bp.route('/check-email')
+def check_email():
+    """Show 'check your email' page after signup."""
+    email = request.args.get('email', '')
+    return render_template('verify_email.html', email=email)
+
+
+@auth_bp.route('/verify/<token>')
+def verify_email(token):
+    """Verify a user's email via token link."""
+    email = verify_token(token)
+    if email is None:
+        flash('The verification link is invalid or has expired.', 'error')
+        return redirect(url_for('auth.login'))
+
+    user = User.query.filter_by(email=email).first()
+    if user is None:
+        flash('No account found for this email.', 'error')
+        return redirect(url_for('auth.login'))
+
+    if user.email_verified:
+        flash('Email already verified. Please log in.', 'info')
+        return redirect(url_for('auth.login'))
+
+    user.email_verified = True
+    db.session.commit()
+
+    flash('Email verified successfully! You can now log in.', 'success')
+    return redirect(url_for('auth.login'))
+
+
+@auth_bp.route('/resend-verification')
+def resend_verification():
+    """Resend the verification email."""
+    email = request.args.get('email', '').strip().lower()
+    if not email:
+        flash('No email address provided.', 'error')
+        return redirect(url_for('auth.login'))
+
+    user = User.query.filter_by(email=email).first()
+    if user is None:
+        # Don't reveal whether the email exists
+        flash('If an account exists with that email, a new verification link has been sent.', 'info')
+        return redirect(url_for('auth.check_email', email=email))
+
+    if user.email_verified:
+        flash('Email already verified. Please log in.', 'info')
+        return redirect(url_for('auth.login'))
+
+    send_verification_email(user)
+    flash('A new verification link has been sent to your email.', 'success')
+    return redirect(url_for('auth.check_email', email=email))
 
 
 @auth_bp.route('/logout')

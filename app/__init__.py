@@ -1,11 +1,13 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_mail import Mail
 from config import config
 
 # Initialize extensions
 db = SQLAlchemy()
 login_manager = LoginManager()
+mail = Mail()
 
 def create_app(config_name='development'):
     """Application factory pattern"""
@@ -17,8 +19,10 @@ def create_app(config_name='development'):
     # Initialize extensions with app
     db.init_app(app)
     login_manager.init_app(app)
+    mail.init_app(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to access this page.'
+    login_manager.login_message_category = 'info'
 
     # User loader for Flask-Login
     from app.models import User
