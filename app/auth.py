@@ -116,15 +116,14 @@ def signup():
         # Create new user (email_verified defaults to False)
         user = User(username=username, email=email)
         user.set_password(password)
-        user.email_verified = True  # Skip verification for now (free tier timeout issue)
         db.session.add(user)
         db.session.commit()
 
-        # Send verification email - TEMPORARILY DISABLED (causes timeout on free tier)
-        # send_verification_email(user)
+        # Send verification email
+        send_verification_email(user)
 
-        flash('Account created successfully! You can now log in.', 'success')
-        return redirect(url_for('auth.login'))
+        flash('Account created! Please check your email to verify your account.', 'success')
+        return redirect(url_for('auth.check_email', email=email))
 
     return render_template('signup.html')
 
