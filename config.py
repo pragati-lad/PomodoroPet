@@ -7,7 +7,13 @@ load_dotenv()
 class Config:
     """Base configuration"""
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///pomopet.db'
+
+    # Database URI - convert postgresql:// to postgresql+psycopg:// for psycopg3
+    database_url = os.environ.get('DATABASE_URL') or 'sqlite:///pomopet.db'
+    if database_url.startswith('postgresql://'):
+        database_url = database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
+    SQLALCHEMY_DATABASE_URI = database_url
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Session configuration
