@@ -5,6 +5,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(UserMixin, db.Model):
     """User model"""
+    __tablename__ = 'users'  # Avoid PostgreSQL reserved keyword "user"
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
@@ -32,7 +34,7 @@ class User(UserMixin, db.Model):
 class Cat(db.Model):
     """Cat model - each user has one cat"""
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     name = db.Column(db.String(64), nullable=False)
     cat_type = db.Column(db.Integer, nullable=False)  # 1-6 for personality types
     age_days = db.Column(db.Integer, default=0)  # Age in "cat days"
@@ -119,7 +121,7 @@ class Cat(db.Model):
 class StudySession(db.Model):
     """Study session model - tracks Pomodoro sessions"""
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     focus_duration = db.Column(db.Integer, default=45)  # Minutes
     break_duration = db.Column(db.Integer, default=15)  # Minutes
     completed = db.Column(db.Boolean, default=False)
