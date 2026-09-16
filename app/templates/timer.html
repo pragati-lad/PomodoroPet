@@ -1279,7 +1279,7 @@
             feedLabel.style.color = 'var(--accent-brown)';
 
             try {
-                cocoModel = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
+                cocoModel = await cocoSsd.load({ base: 'mobilenet_v2' });
                 feedLabel.textContent = 'Focus tracking active';
                 feedLabel.style.color = 'var(--accent-green)';
                 startObjectDetection();
@@ -1328,7 +1328,7 @@
 
                 // Look for phone/tablet-like objects with lower threshold
                 const phoneDetected = predictions.some(p =>
-                    PHONE_CLASSES.includes(p.class) && p.score > 0.3
+                    PHONE_CLASSES.includes(p.class) && p.score > 0.2
                 );
 
                 if (phoneDetected && !distractionCooldown) {
@@ -1337,7 +1337,7 @@
             } catch (e) {
                 debugEl.textContent = 'Detection error';
             }
-        }, 2000);
+        }, 1000);
     }
 
     function triggerDistraction() {

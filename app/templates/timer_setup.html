@@ -228,6 +228,81 @@
         cursor: not-allowed;
         transform: none;
     }
+
+    /* Camera tips popup overlay */
+    .camera-popup-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .camera-popup-overlay.active {
+        display: flex;
+    }
+
+    .camera-popup {
+        background: var(--card-cream);
+        border: 2.5px solid var(--border-sketch);
+        border-radius: 4px;
+        box-shadow: 5px 5px 0px var(--shadow-soft);
+        padding: 30px;
+        max-width: 420px;
+        width: 90%;
+        position: relative;
+        transform: rotate(-0.5deg);
+    }
+
+    .camera-popup::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%) rotate(2deg);
+        width: 80px;
+        height: 18px;
+        background: rgba(200, 190, 170, 0.6);
+        border-radius: 2px;
+    }
+
+    .camera-popup h3 {
+        font-family: 'Patrick Hand', cursive;
+        font-size: 1.4rem;
+        color: var(--text-dark);
+        margin-bottom: 15px;
+    }
+
+    .camera-popup p strong {
+        color: var(--text-dark);
+    }
+
+    .camera-popup-btn {
+        font-family: 'Patrick Hand', cursive;
+        width: 100%;
+        padding: 12px;
+        font-size: 1.1rem;
+        background: var(--card-green);
+        color: var(--text-dark);
+        border: 2.5px solid var(--border-sketch);
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: bold;
+        box-shadow: 3px 3px 0px var(--shadow-soft);
+        transition: all 0.3s;
+    }
+
+    .camera-popup-btn:hover {
+        background: var(--accent-green);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 5px 5px 0px var(--shadow-soft);
+    }
 </style>
 {% endblock %}
 
@@ -286,6 +361,17 @@
         <button type="submit" class="btn btn-primary">Start Study Session</button>
     </form>
 </div>
+
+<!-- Camera tips popup -->
+<div class="camera-popup-overlay" id="cameraPopup">
+    <div class="camera-popup">
+        <h3>Heads up! (>_<)</h3>
+        <p style="font-family: 'Nunito', sans-serif; color: var(--text-soft); font-size: 1rem; line-height: 1.6; margin-bottom: 20px;">
+            This feature might get affected by your <strong>camera quality</strong>, <strong>lighting</strong>, and <strong>PC brightness</strong>. It works best in a well-lit room with a decent webcam!
+        </p>
+        <button type="button" class="camera-popup-btn" id="cameraPopupClose">Got it</button>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -317,6 +403,9 @@
     // Camera toggle
     const cameraBtns = document.querySelectorAll('.camera-btn');
     const cameraInput = document.getElementById('cameraInput');
+    const cameraPopup = document.getElementById('cameraPopup');
+    const cameraPopupClose = document.getElementById('cameraPopupClose');
+    let cameraPopupShown = false;
 
     cameraBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -325,7 +414,17 @@
 
             const camera = btn.getAttribute('data-camera');
             cameraInput.value = camera;
+
+            // Show tips popup the first time user enables camera
+            if (camera === 'on' && !cameraPopupShown) {
+                cameraPopupShown = true;
+                cameraPopup.classList.add('active');
+            }
         });
+    });
+
+    cameraPopupClose.addEventListener('click', () => {
+        cameraPopup.classList.remove('active');
     });
 </script>
 {% endblock %}
