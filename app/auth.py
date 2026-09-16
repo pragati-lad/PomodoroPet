@@ -1,13 +1,12 @@
 import logging
 import sys
+import resend
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_user, logout_user, current_user, login_required
-from flask_mail import Message
 from itsdangerous import URLSafeTimedSerializer
-from app import db, mail
+from app import db
 from app.models import User
 from urllib.parse import urlparse
-from threading import Thread
 
 logger = logging.getLogger(__name__)
 
@@ -29,29 +28,27 @@ def verify_token(token, max_age=3600):
         return None
 
 
-def send_async_email(app, msg):
-    """Send email in background thread with error logging."""
-    with app.app_context():
-        try:
-            mail.send(msg)
-            print(f"[EMAIL] Sent to {msg.recipients}", file=sys.stderr)
-        except Exception as e:
-            print(f"[EMAIL ERROR] Failed to send to {msg.recipients}: {e}", file=sys.stderr)
-
-
 def send_verification_email(user):
-    """Send a verification email with a tokenized link (async)."""
+    """Send a verification email with a tokenized link via Resend."""
     token = generate_verification_token(user.email)
     verify_url = url_for('auth.verify_email', token=token, _external=True)
-    msg = Message('Verify your PomoPet account', recipients=[user.email])
-    msg.body = (
-        f"Hi {user.username},\n\n"
-        f"Click the link below to verify your email:\n"
-        f"{verify_url}\n\n"
-        f"This link expires in 1 hour.\n\n"
-        f"- PomoPet"
-    )
-    Thread(target=send_async_email, args=(current_app._get_current_object(), msg)).start()
+    resend.api_key = current_app.config['RESEND_API_KEY']
+    try:
+        resend.Emails.send({
+            "from": current_app.config['MAIL_FROM'],
+            "to": [user.email],
+            "subject": "Verify your PomoPet account",
+            "text": (
+                f"Hi {user.username},\n\n"
+                f"Click the link below to verify your email:\n"
+                f"{verify_url}\n\n"
+                f"This link expires in 1 hour.\n\n"
+                f"- PomoPet"
+            ),
+        })
+        print(f"[EMAIL] Sent to {user.email}", file=sys.stderr)
+    except Exception as e:
+        print(f"[EMAIL ERROR] Failed to send to {user.email}: {e}", file=sys.stderr)
 
 
 def validate_password_strength(password):
@@ -160,17 +157,7 @@ def signup():
 
         # Send verification email
         try:
-            token = generate_verification_token(user.email)
-            verify_url = url_for('auth.verify_email', token=token, _external=True)
-            msg = Message('Verify your PomoPet account', recipients=[user.email])
-            msg.body = (
-                f"Hi {user.username},\n\n"
-                f"Click the link below to verify your email:\n"
-                f"{verify_url}\n\n"
-                f"This link expires in 1 hour.\n\n"
-                f"- PomoPet"
-            )
-            mail.send(msg)
+            send_verification_email(user)
             flash('Account created! Please check your email to verify your account.', 'success')
         except Exception as e:
             flash(f'Account created but email failed: {e}', 'error')

@@ -30,14 +30,9 @@ class Config:
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     UPLOAD_FOLDER = 'app/static/uploads'
 
-    # Email (Gmail SMTP)
-    MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = 587
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_USERNAME')
-    MAIL_TIMEOUT = 30
+    # Email (Resend API)
+    RESEND_API_KEY = os.environ.get('RESEND_API_KEY')
+    MAIL_FROM = os.environ.get('MAIL_FROM', 'onboarding@resend.dev')
 
 class DevelopmentConfig(Config):
     """Development configuration"""
