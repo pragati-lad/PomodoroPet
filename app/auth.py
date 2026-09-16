@@ -28,7 +28,11 @@ def verify_token(token, max_age=3600):
 def send_async_email(app, msg):
     """Send email in background with Flask app context."""
     with app.app_context():
-        mail.send(msg)
+        try:
+            mail.send(msg)
+            print(f"[EMAIL] Sent to {msg.recipients}")
+        except Exception as e:
+            print(f"[EMAIL ERROR] Failed to send to {msg.recipients}: {e}")
 
 
 def send_verification_email(user):
