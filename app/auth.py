@@ -1,3 +1,4 @@
+import logging
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_mail import Message
@@ -5,7 +6,8 @@ from itsdangerous import URLSafeTimedSerializer
 from app import db, mail
 from app.models import User
 from urllib.parse import urlparse
-from threading import Thread
+
+logger = logging.getLogger(__name__)
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -25,18 +27,8 @@ def verify_token(token, max_age=3600):
         return None
 
 
-def send_async_email(app, msg):
-    """Send email in background with Flask app context."""
-    with app.app_context():
-        try:
-            mail.send(msg)
-            print(f"[EMAIL] Sent to {msg.recipients}")
-        except Exception as e:
-            print(f"[EMAIL ERROR] Failed to send to {msg.recipients}: {e}")
-
-
 def send_verification_email(user):
-    """Send a verification email with a tokenized link (async)."""
+    """Send a verification email with a tokenized link."""
     token = generate_verification_token(user.email)
     verify_url = url_for('auth.verify_email', token=token, _external=True)
     msg = Message('Verify your PomoPet account', recipients=[user.email])
@@ -47,8 +39,11 @@ def send_verification_email(user):
         f"This link expires in 1 hour.\n\n"
         f"- PomoPet"
     )
-    # Send email in background thread (doesn't block signup)
-    Thread(target=send_async_email, args=(current_app._get_current_object(), msg)).start()
+    try:
+        mail.send(msg)
+        logger.info(f"[EMAIL] Sent to {msg.recipients}")
+    except Exception as e:
+        logger.error(f"[EMAIL ERROR] Failed to send to {msg.recipients}: {e}")
 
 
 def validate_password_strength(password):
