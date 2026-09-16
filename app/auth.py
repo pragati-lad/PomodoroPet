@@ -82,7 +82,6 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
-        remember = request.form.get('remember') == 'on'
 
         if not username or not password:
             flash('Please enter both username and password', 'error')
@@ -98,7 +97,7 @@ def login():
             flash('Please verify your email before logging in. Check your inbox for the verification link.', 'error')
             return redirect(url_for('auth.login'))
 
-        login_user(user, remember=remember)
+        login_user(user, remember=True)
 
         # Redirect to next page or dashboard
         next_page = request.args.get('next')
