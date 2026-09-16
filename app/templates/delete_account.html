@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Account - PomoPet{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box" style="border-color: var(--accent-coral);">
+        <h1 style="color: var(--accent-coral);">Delete Account</h1>
+        <p style="font-weight: bold; color: var(--accent-coral);">Warning: This action cannot be undone!</p>
+
+        <div style="background: rgba(255, 107, 107, 0.1); padding: 15px; border-radius: 8px; margin: 20px 0; border: 2px dashed var(--accent-coral);">
+            <p><strong>What will be deleted:</strong></p>
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li>Your account and profile</li>
+                <li>Your virtual cat ({{ current_user.cat.name if current_user.cat else 'N/A' }})</li>
+                <li>All study session history</li>
+                <li>All statistics and progress</li>
+            </ul>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.delete_account') }}" class="auth-form">
+            <div class="form-group">
+                <label for="password">Enter your password to confirm:</label>
+                <input type="password" id="password" name="password" required autofocus>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <a href="{{ url_for('main.dashboard') }}" class="btn" style="flex: 1; text-align: center; background: var(--text-secondary);">
+                    Cancel
+                </a>
+                <button type="submit" class="btn" style="flex: 1; background: var(--accent-coral);">
+                    Delete Forever
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, current_user, login_required
 from flask_mail import Message
 from itsdangerous import URLSafeTimedSerializer
 from app import db, mail
@@ -45,6 +45,28 @@ def send_verification_email(user):
     )
     # Send email in background thread (doesn't block signup)
     Thread(target=send_async_email, args=(current_app._get_current_object(), msg)).start()
+
+
+def validate_password_strength(password):
+    """Validate password meets strength requirements.
+    Returns (is_valid, error_message)
+    """
+    if len(password) < 8:
+        return False, 'Password must be at least 8 characters'
+
+    if not any(c.isupper() for c in password):
+        return False, 'Password must contain at least one uppercase letter'
+
+    if not any(c.islower() for c in password):
+        return False, 'Password must contain at least one lowercase letter'
+
+    if not any(c.isdigit() for c in password):
+        return False, 'Password must contain at least one number'
+
+    if not any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in password):
+        return False, 'Password must contain at least one special character (!@#$%^&* etc.)'
+
+    return True, None
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -105,8 +127,10 @@ def signup():
             flash('Username must be at least 3 characters', 'error')
             return redirect(url_for('auth.signup'))
 
-        if len(password) < 6:
-            flash('Password must be at least 6 characters', 'error')
+        # Validate password strength
+        is_valid, error_msg = validate_password_strength(password)
+        if not is_valid:
+            flash(error_msg, 'error')
             return redirect(url_for('auth.signup'))
 
         if password != password_confirm:
@@ -188,6 +212,34 @@ def resend_verification():
     send_verification_email(user)
     flash('A new verification link has been sent to your email.', 'success')
     return redirect(url_for('auth.check_email', email=email))
+
+
+@auth_bp.route('/delete-account', methods=['GET', 'POST'])
+@login_required
+def delete_account():
+    """Delete user account permanently"""
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+
+        if not password:
+            flash('Please enter your password to confirm deletion', 'error')
+            return redirect(url_for('auth.delete_account'))
+
+        # Verify password
+        if not current_user.check_password(password):
+            flash('Incorrect password. Account not deleted.', 'error')
+            return redirect(url_for('auth.delete_account'))
+
+        # Delete user (cascade will delete cat and study sessions automatically)
+        username = current_user.username
+        db.session.delete(current_user)
+        db.session.commit()
+
+        logout_user()
+        flash(f'Account "{username}" has been permanently deleted. Goodbye!', 'info')
+        return redirect(url_for('main.index'))
+
+    return render_template('delete_account.html')
 
 
 @auth_bp.route('/logout')

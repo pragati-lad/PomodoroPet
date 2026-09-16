@@ -21,12 +21,15 @@
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required minlength="6">
+                <input type="password" id="password" name="password" required minlength="8">
+                <small style="color: var(--text-secondary); font-size: 0.85em; display: block; margin-top: 5px;">
+                    Must be 8+ characters with uppercase, lowercase, number, and special character (!@#$% etc.)
+                </small>
             </div>
 
             <div class="form-group">
                 <label for="password_confirm">Confirm Password</label>
-                <input type="password" id="password_confirm" name="password_confirm" required minlength="6">
+                <input type="password" id="password_confirm" name="password_confirm" required minlength="8">
             </div>
 
             <button type="submit" class="btn btn-primary">Create Account</button>
