@@ -159,9 +159,22 @@ def signup():
         db.session.commit()
 
         # Send verification email
-        send_verification_email(user)
+        try:
+            token = generate_verification_token(user.email)
+            verify_url = url_for('auth.verify_email', token=token, _external=True)
+            msg = Message('Verify your PomoPet account', recipients=[user.email])
+            msg.body = (
+                f"Hi {user.username},\n\n"
+                f"Click the link below to verify your email:\n"
+                f"{verify_url}\n\n"
+                f"This link expires in 1 hour.\n\n"
+                f"- PomoPet"
+            )
+            mail.send(msg)
+            flash('Account created! Please check your email to verify your account.', 'success')
+        except Exception as e:
+            flash(f'Account created but email failed: {e}', 'error')
 
-        flash('Account created! Please check your email to verify your account.', 'success')
         return redirect(url_for('auth.check_email', email=email))
 
     return render_template('signup.html')
