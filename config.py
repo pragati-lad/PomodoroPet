@@ -15,6 +15,10 @@ class Config:
     SQLALCHEMY_DATABASE_URI = database_url
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,
+        'pool_recycle': 300,
+    }
 
     # Session configuration
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
@@ -33,6 +37,7 @@ class Config:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_USERNAME')
+    MAIL_TIMEOUT = 30
 
 class DevelopmentConfig(Config):
     """Development configuration"""
