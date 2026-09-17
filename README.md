@@ -1,87 +1,81 @@
-# PomoPet 🐱
+# PomoPet
 
-A Pomodoro timer app with a virtual cat companion that grows as you study.
+A Pomodoro timer web app with a virtual cat companion that grows as you study. Built with a Studio Ghibli-inspired aesthetic.
+
+**Live**: [pomodoropet.onrender.com](https://pomodoropet.onrender.com)
+
+![Landing Page](screenshots/landing.png)
 
 ## Features
 
-- 🐱 Choose from 6 unique cat personalities
-- ⏰ Customizable focus and break timers
-- 📈 Cat grows and evolves based on completed sessions
-- 😊 Mood & hunger system - care for your cat during breaks
-- 📊 Track your study statistics
-- ✉️ Email verification for account security
+- Choose from 6 unique cat companions, each with their own personality
+- Customizable focus and break timers (default or custom intervals)
+- Cat grows, ages, and evolves based on your study sessions
+- Mood, hunger, and happiness system -- neglect your cat and it gets sad
+- Camera-based phone detection using TensorFlow.js (COCO-SSD) to track focus
+- Focus scoring that penalizes distractions
+- Feed and play with your cat during study breaks
+- Email verification for account security
+- Study statistics tracking
+
+## Cat Companions
+
+![Cat Selection](screenshots/cats.png)
+
+| Cat | Personality |
+|-----|-------------|
+| Shadow | Mysterious & Independent |
+| Ginger | Energetic & Demanding |
+| Mittens | Playful & Mischievous |
+| Mochi | Lazy & Sleepy |
+| Pepper | Sassy & Moody |
+| Tofu | Gentle & Supportive |
 
 ## Tech Stack
 
-- Flask (Python web framework)
-- SQLite database
-- Flask-Login for authentication
-- Flask-Mail for email verification
-- Studio Ghibli-inspired UI design
+| Layer | Technology |
+|-------|------------|
+| Backend | Python, Flask, SQLAlchemy, Flask-Login |
+| Frontend | HTML (Jinja2), CSS, vanilla JavaScript |
+| Database | PostgreSQL (Supabase) / SQLite (local) |
+| AI/ML | TensorFlow.js, COCO-SSD (phone detection) |
+| Email | Resend API |
+| Hosting | Render, GitHub (CI/CD) |
 
 ## Quick Start
 
 ```bash
-# Clone and navigate to project
-cd pomodoro
-
-# Create virtual environment
+# Clone and set up
+git clone https://github.com/pragati-lad/PomodoroPet.git
+cd PomodoroPet
 python -m venv venv
-venv\Scripts\activate  # Windows
-source venv/bin/activate  # Mac/Linux
-
-# Install dependencies
+venv\Scripts\activate        # Windows
+source venv/bin/activate     # Mac/Linux
 pip install -r requirements.txt
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your Gmail credentials
+# Add environment variables
+# Create a .env file with:
+# RESEND_API_KEY=your-resend-api-key
+# MAIL_FROM=onboarding@resend.dev
 
-# Run the app
+# Run
 python run.py
 ```
 
 Visit **http://localhost:5001**
 
-## Environment Setup
-
-Create a `.env` file with:
-
-```env
-MAIL_USERNAME=your-email@gmail.com
-MAIL_PASSWORD=your-gmail-app-password
-```
-
-**Note:** Use a Gmail App Password, not your regular password. [Generate one here](https://myaccount.google.com/apppasswords)
-
 ## Project Structure
 
 ```
-├── app/
-│   ├── auth.py           # Authentication & email verification
-│   ├── routes.py         # Main app routes
-│   ├── models.py         # Database models
-│   ├── templates/        # HTML templates
-│   └── static/           # CSS, JS, audio files
-├── config.py             # App configuration
-├── run.py               # Application entry point
-└── Procfile             # Deployment configuration
+app/
+  auth.py           # Authentication & email verification
+  routes.py         # Main app routes & API endpoints
+  models.py         # Database models (User, Cat, StudySession)
+  templates/        # Jinja2 HTML templates
+  static/           # CSS, JS, audio files
+config.py           # Environment-based configuration
+run.py              # Application entry point
 ```
-
-## Cat Personalities
-
-1. **Shadow** - Mysterious and independent
-2. **Ginger** - Energetic and playful
-3. **Mittens** - Gentle and affectionate
-4. **Mochi** - Lazy and food-loving
-5. **Pepper** - Curious and adventurous
-6. **Tofu** - Calm and wise
-
-## Deployment
-
-Configured for deployment on Render, Railway, or similar platforms.
-
-See [CLAUDE.md](CLAUDE.md) for detailed development instructions.
 
 ## License
 
