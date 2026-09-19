@@ -616,6 +616,8 @@
     let isPaused = false;
     let focusScore = 100;
     let focusPhaseCompleted = false;
+    let endTime = null;        // wall-clock timestamp when timer should hit 0
+    let pausedRemaining = null; // seconds left when paused
 
     // DOM elements
     const countdown = document.getElementById('countdown');
@@ -1119,9 +1121,13 @@
         pauseBtn.disabled = false;
         stopBtn.disabled = false;
 
+        // Set the wall-clock end time
+        endTime = Date.now() + timeRemaining * 1000;
+
         timerInterval = setInterval(() => {
             if (!isPaused) {
-                timeRemaining--;
+                timeRemaining = Math.round((endTime - Date.now()) / 1000);
+                if (timeRemaining < 0) timeRemaining = 0;
                 updateDisplay();
 
                 if (timeRemaining <= 0) {
@@ -1154,6 +1160,14 @@
     // Pause timer
     function pauseTimer() {
         isPaused = !isPaused;
+        if (isPaused) {
+            // Save remaining time when pausing
+            pausedRemaining = Math.round((endTime - Date.now()) / 1000);
+            if (pausedRemaining < 0) pausedRemaining = 0;
+        } else {
+            // Recalculate end time when resuming
+            endTime = Date.now() + pausedRemaining * 1000;
+        }
         pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
         setCatAnimation(isPaused ? 'sleeping' : 'walking');
     }
