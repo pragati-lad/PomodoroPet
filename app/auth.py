@@ -49,6 +49,7 @@ def send_verification_email(user):
         print(f"[EMAIL] Sent to {user.email}", file=sys.stderr)
     except Exception as e:
         print(f"[EMAIL ERROR] Failed to send to {user.email}: {e}", file=sys.stderr)
+        raise
 
 
 def validate_password_strength(password):
