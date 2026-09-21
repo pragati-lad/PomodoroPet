@@ -2,7 +2,7 @@
 
 A Pomodoro timer web app with a virtual cat companion that grows as you study. Built with a Studio Ghibli-inspired aesthetic.
 
-**Live**: [pomodoropet.onrender.com](https://pomodoropet.onrender.com)
+**Live**: [pomopet.madebypragati.com](https://pomopet.madebypragati.com)
 
 ![Landing Page](screenshots/landing.png)
 
