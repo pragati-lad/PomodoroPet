@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from app.models import Cat, StudySession
+from app.models import Cat, StudySession, MIN_STUDY_MINUTES
 from datetime import datetime, date, timedelta
 
 main_bp = Blueprint('main', __name__)
@@ -33,9 +33,9 @@ def dashboard():
         completed=True
     ).all()
     minutes_today = sum(
-        (s.actual_duration if s.actual_duration is not None else s.focus_duration)
+        s.effective_duration()
         for s in today_sessions
-        if s.completed_at and s.completed_at.date() == today
+        if s.completed_at and s.completed_at.date() == today and s.counts_toward_goal()
     )
     daily_goal = current_user.daily_goal
     goal_met = minutes_today >= daily_goal
@@ -88,7 +88,7 @@ def timer_setup():
         camera_enabled = request.form.get('camera') == 'on'
 
         if mode == 'custom':
-            focus_duration = int(request.form.get('focus_duration', 45))
+            focus_duration = max(int(request.form.get('focus_duration', 45)), MIN_STUDY_MINUTES)
             break_duration = int(request.form.get('break_duration', 15))
         else:
             focus_duration = 45
@@ -118,7 +118,7 @@ def timer(session_id):
     if session.user_id != current_user.id:
         return redirect(url_for('main.dashboard'))
 
-    return render_template('timer.html', session=session, cat=current_user.cat)
+    return render_template('timer.html', session=session, cat=current_user.cat, min_study_minutes=MIN_STUDY_MINUTES)
 
 
 @main_bp.route('/api/complete-session/<int:session_id>', methods=['POST'])
@@ -151,7 +151,7 @@ def complete_session(session_id):
 def create_session():
     """API endpoint to create a new study session (used by Repeat button)"""
     data = request.json
-    focus_duration = int(data.get('focus_duration', 45))
+    focus_duration = max(int(data.get('focus_duration', 45)), MIN_STUDY_MINUTES)
     break_duration = int(data.get('break_duration', 15))
     camera_enabled = bool(data.get('camera_enabled', False))
 

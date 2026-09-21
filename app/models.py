@@ -3,6 +3,8 @@ from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
+MIN_STUDY_MINUTES = 20
+
 class User(UserMixin, db.Model):
     """User model"""
     __tablename__ = 'users'  # Avoid PostgreSQL reserved keyword "user"
@@ -131,6 +133,14 @@ class StudySession(db.Model):
     started_at = db.Column(db.DateTime, default=datetime.utcnow)
     completed_at = db.Column(db.DateTime)
 
+    def effective_duration(self):
+        """Return actual studied minutes, falling back to planned duration"""
+        return self.actual_duration if self.actual_duration is not None else self.focus_duration
+
+    def counts_toward_goal(self):
+        """Return True if this session's effective duration meets the minimum"""
+        return self.effective_duration() >= MIN_STUDY_MINUTES
+
     def complete_session(self, focus_score=100, actual_duration=None):
         """Mark session as completed and reward cat if daily goal is met"""
         self.completed = True
@@ -140,22 +150,23 @@ class StudySession(db.Model):
 
         cat = self.user.cat
         if cat:
-            # Always reward happiness and size per session
-            cat.happiness = min(100, cat.happiness + 15)
-            cat.size = min(2.0, cat.size + 0.02)
+            # Only reward happiness and size if session counts toward goal
+            if self.counts_toward_goal():
+                cat.happiness = min(100, cat.happiness + 15)
+                cat.size = min(2.0, cat.size + 0.02)
 
             # Cat ages only if daily goal is met AND hasn't grown today
             today = datetime.utcnow().date()
             if cat.last_growth_date != today:
-                # Sum all completed sessions today (including this one)
-                this_duration = actual_duration if actual_duration is not None else self.focus_duration
+                # Sum all completed sessions today that meet the minimum
+                this_duration = self.effective_duration() if self.counts_toward_goal() else 0
                 total_today = this_duration
                 for s in self.user.study_sessions.filter(
                     StudySession.completed == True,
                     StudySession.id != self.id
                 ).all():
-                    if s.completed_at and s.completed_at.date() == today:
-                        total_today += (s.actual_duration if s.actual_duration is not None else s.focus_duration)
+                    if s.completed_at and s.completed_at.date() == today and s.counts_toward_goal():
+                        total_today += s.effective_duration()
 
                 if total_today >= self.user.daily_goal:
                     cat.age_days += 1

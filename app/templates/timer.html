@@ -580,6 +580,9 @@
 <div class="confirm-overlay" id="confirmOverlay">
     <div class="confirm-card">
         <div class="confirm-msg">End this session?</div>
+        <p id="earlyEndWarning" style="display: none; font-family: 'Nunito', sans-serif; font-size: 0.9rem; color: var(--text-dark); background: var(--card-pink); border: 2px dashed var(--border-sketch); border-radius: 4px; padding: 10px 14px; margin-bottom: 16px; line-height: 1.5;">
+            Less than 20 minutes studied -- this session won't count toward your daily goal.
+        </p>
         <div class="confirm-buttons">
             <button class="confirm-yes" id="confirmYes">Yes, end it</button>
             <button class="confirm-no" id="confirmNo">Keep studying</button>
@@ -1173,7 +1176,22 @@
     }
 
     // Stop session -- show custom confirm modal
+    const minStudyMinutes = {{ min_study_minutes }};
+
     function stopSession() {
+        // Calculate elapsed focus minutes so far
+        let elapsedMinutes;
+        if (focusPhaseCompleted) {
+            elapsedMinutes = {{ session.focus_duration }};
+        } else if (currentPhase === 'focus') {
+            elapsedMinutes = Math.floor((focusDuration - timeRemaining) / 60);
+        } else {
+            elapsedMinutes = {{ session.focus_duration }};
+        }
+
+        const warning = document.getElementById('earlyEndWarning');
+        warning.style.display = (elapsedMinutes < minStudyMinutes) ? 'block' : 'none';
+
         document.getElementById('confirmOverlay').classList.add('active');
     }
 
