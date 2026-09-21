@@ -1235,7 +1235,7 @@
         if (focusPhaseCompleted) {
             actualMinutes = {{ session.focus_duration }};
         } else {
-            actualMinutes = Math.round((focusDuration - timeRemaining) / 60);
+            actualMinutes = Math.ceil((focusDuration - timeRemaining) / 60);
         }
 
         fetch(`/api/complete-session/{{ session.id }}`, {

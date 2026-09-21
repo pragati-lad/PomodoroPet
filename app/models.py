@@ -148,14 +148,14 @@ class StudySession(db.Model):
             today = datetime.utcnow().date()
             if cat.last_growth_date != today:
                 # Sum all completed sessions today (including this one)
-                this_duration = actual_duration or self.focus_duration
+                this_duration = actual_duration if actual_duration is not None else self.focus_duration
                 total_today = this_duration
                 for s in self.user.study_sessions.filter(
                     StudySession.completed == True,
                     StudySession.id != self.id
                 ).all():
                     if s.completed_at and s.completed_at.date() == today:
-                        total_today += (s.actual_duration or s.focus_duration)
+                        total_today += (s.actual_duration if s.actual_duration is not None else s.focus_duration)
 
                 if total_today >= self.user.daily_goal:
                     cat.age_days += 1

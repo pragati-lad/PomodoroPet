@@ -33,7 +33,7 @@ def dashboard():
         completed=True
     ).all()
     minutes_today = sum(
-        (s.actual_duration or s.focus_duration)
+        (s.actual_duration if s.actual_duration is not None else s.focus_duration)
         for s in today_sessions
         if s.completed_at and s.completed_at.date() == today
     )
